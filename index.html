@@ -13,6 +13,14 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{position:sticky;top:0;z-index:20;background:var(--pri);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px}
+#hTitle{cursor:pointer}
+#hTitle small{font-weight:400;opacity:.8;font-size:12px;margin-left:4px}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:var(--bg);width:100%;max-width:760px;max-height:88vh;overflow:auto;border-radius:14px 14px 0 0;padding:12px}
+.pj{display:flex;gap:10px;align-items:center;background:#fff;border-radius:10px;padding:10px;margin-bottom:8px;border:2px solid transparent}
+.pj.act{border-color:var(--pri)}.pj .main{flex:1;min-width:0}.pj .nm{font-weight:700}
+.pj button{border:0;background:#eef1f5;color:var(--pri);border-radius:8px;padding:7px 9px;font-size:13px}
+.badge{font-size:11px;padding:1px 7px;border-radius:8px;background:#eee;color:#666;margin-left:6px}
 #hLogo{height:34px;background:#fff;border-radius:5px;padding:2px}
 header h1{font-size:16px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #gpsBadge{font-size:12px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,.18);white-space:nowrap}
@@ -84,7 +92,7 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
 <body>
 <header>
   <img id="hLogo" alt="IV Ingeniería">
-  <h1 id="hTitle">Encuestas SSR</h1>
+  <h1 id="hTitle" title="Cambiar de proyecto">Encuestas SSR</h1>
   <span id="gpsBadge">GPS —</span>
 </header>
 
@@ -251,7 +259,8 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
 <!-- ============ CONFIG ============ -->
 <section class="tab" id="t-cfg">
   <div class="card">
-    <h2>Proyecto</h2>
+    <h2>Proyecto activo</h2>
+    <button class="btn sec w" id="bProj" style="margin-bottom:6px">📂 Cambiar o crear proyecto</button>
     <label class="f">Nombre del proyecto (encabezado de Excel e informe)</label><textarea id="c_proyecto"></textarea>
     <label class="f">Nombre corto del SSR (para la declaración jurada)</label><input type="text" id="c_ssr">
     <div class="row">
@@ -259,6 +268,9 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
       <div><label class="f">Región</label><input type="text" id="c_region"></div>
     </div>
     <label class="f">Institución responsable (unidad técnica)</label><input type="text" id="c_ut">
+  </div>
+  <div class="card">
+    <h2>Equipo y empresa <span class="mut" style="text-transform:none;letter-spacing:0">(todos los proyectos)</span></h2>
     <div class="row">
       <div><label class="f">Encuestador</label><input type="text" id="c_encuestador"></div>
       <div><label class="f">Profesional a cargo (informe)</label><input type="text" id="c_profesional"></div>
@@ -271,7 +283,7 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     <textarea id="c_obsList" style="min-height:150px"></textarea>
   </div>
   <div class="card">
-    <h2>Rangos de ingreso ($/mes)</h2>
+    <h2>Rangos de ingreso ($/mes) <span class="mut" style="text-transform:none;letter-spacing:0">(de este proyecto)</span></h2>
     <div class="row">
       <div><label class="f">Tope rango 1</label><input type="number" id="c_r1"></div>
       <div><label class="f">Tope rango 2</label><input type="number" id="c_r2"></div>
@@ -290,9 +302,9 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
   <div class="card">
     <h2>Datos del teléfono</h2>
     <p class="mut" id="storInfo"></p>
-    <button class="btn bad w" id="bWipe">Borrar todas las encuestas de este teléfono</button>
+    <button class="btn bad w" id="bWipe">Borrar las encuestas de este proyecto</button>
   </div>
-  <p class="mut" style="text-align:center">Encuestas SSR · v1.0</p>
+  <p class="mut" style="text-align:center">Encuestas SSR · v2.0 (multi-proyecto)</p>
 </section>
 </main>
 
@@ -305,6 +317,13 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
 </nav>
 <datalist id="dlSector"></datalist><datalist id="dlOcup"></datalist>
 <div id="toast"></div>
+<div class="sheet hide" id="projSheet"><div>
+  <div style="display:flex;align-items:center;margin-bottom:8px"><h2 style="flex:1;margin:0;font-size:17px;color:var(--pri)">Proyectos</h2><button class="btn sec" id="pjClose">Cerrar</button></div>
+  <div id="pjList"></div>
+  <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0 12px"><input type="checkbox" id="pjShowArch"> Mostrar proyectos archivados</label>
+  <button class="btn w" id="pjNew">＋ Nuevo proyecto</button>
+  <p class="mut">Cada proyecto tiene su propia configuración, numeración y encuestas. Los exportables (Excel, KMZ, informe, fichas, respaldo) salen solo del proyecto activo.</p>
+</div></div>
 <div id="print"></div>
 
 <script>
@@ -339,15 +358,47 @@ const DEF_CFG = {
   obsList:'CABAÑAS ASOCIADAS\nMÁS DE UNA VIVIENDA EN EL PREDIO\nCASA DE VERANEO / USO TEMPORAL\nNEGOCIO O LOCAL EN LA VIVIENDA\nUSO AGRÍCOLA O ANIMALES\nPROPIETARIO NO RESIDE\nACCESO DIFÍCIL\nCONSTRUCCIÓN EN CURSO\nVOLVER A VISITAR',
   r1:440000, r2:700000, r3:1050000, acc:5, nread:8, lastBackup:0, devId:''
 };
-let CFG = loadCfg();
+let CFG = null;
+/* Proyectos: cada uno guarda sus datos propios; el resto de la configuración es común */
+const PROJ_KEYS=['proyecto','ssr','comuna','region','ut','r1','r2','r3','lastBackup'];
+let PROJS=[];
+function pick(o,keys){ const r={}; keys.forEach(k=>{ if(o[k]!==undefined) r[k]=o[k]; }); return r; }
+function newProjId(){ return 'p-'+(CFG&&CFG.devId||'x')+'-'+Date.now().toString(36); }
 function loadCfg(){
   let c={};
   try{ c = JSON.parse(localStorage.getItem('ssr_cfg')||'{}'); }catch(e){}
+  try{ PROJS = JSON.parse(localStorage.getItem('ssr_projects')||'[]'); }catch(e){ PROJS=[]; }
   c = Object.assign({}, DEF_CFG, c);
-  if(!c.devId){ c.devId = Math.random().toString(36).slice(2,7); try{localStorage.setItem('ssr_cfg',JSON.stringify(c));}catch(e){} }
+  if(!c.devId) c.devId = Math.random().toString(36).slice(2,7);
+  if(!PROJS.length){ // primera vez o migración desde la versión de un solo proyecto
+    const p=Object.assign(pick(DEF_CFG,PROJ_KEYS), pick(c,PROJ_KEYS), {id:'p-'+c.devId+'-'+Date.now().toString(36), creado:Date.now(), archived:false});
+    PROJS=[p]; c.activeProj=p.id;
+  }
+  if(!PROJS.find(p=>p.id===c.activeProj)) c.activeProj=PROJS[0].id;
+  const act=PROJS.find(p=>p.id===c.activeProj);
+  c = Object.assign(c, pick(DEF_CFG,PROJ_KEYS), pick(act,PROJ_KEYS));
+  try{ localStorage.setItem('ssr_projects',JSON.stringify(PROJS)); }catch(e){}
   return c;
 }
-function saveCfg(){ try{ localStorage.setItem('ssr_cfg', JSON.stringify(CFG)); }catch(e){} }
+function saveCfg(){
+  const act=PROJS.find(p=>p.id===CFG.activeProj); if(act) Object.assign(act, pick(CFG,PROJ_KEYS));
+  const glob={}; Object.keys(CFG).forEach(k=>{ if(!PROJ_KEYS.includes(k)) glob[k]=CFG[k]; });
+  try{ localStorage.setItem('ssr_cfg', JSON.stringify(glob)); localStorage.setItem('ssr_projects', JSON.stringify(PROJS)); }catch(e){}
+}
+function projName(p){ return p.ssr ? 'SSR '+p.ssr : 'Proyecto sin nombre'; }
+async function switchProject(id){
+  saveCfg();
+  const p=PROJS.find(x=>x.id===id); if(!p) return;
+  CFG.activeProj=id; Object.assign(CFG, pick(DEF_CFG,PROJ_KEYS), pick(p,PROJ_KEYS)); saveCfg();
+  fillCfg(); await reload(); newForm(); MV.cx=null;
+  toast('Proyecto activo: '+projName(p));
+}
+function createProject(fields){
+  const p=Object.assign(pick(DEF_CFG,PROJ_KEYS),{lastBackup:0},fields||{},{id:(fields&&fields.id)||newProjId(),creado:Date.now(),archived:false});
+  PROJS.push(p); saveCfg(); return p;
+}
+CFG = loadCfg();
+function findProjByName(ssr){ const k=slug(ssr).toUpperCase(); return ssr && PROJS.find(p=>p.ssr && slug(p.ssr).toUpperCase()===k); }
 
 /* ====================================================================
    UTILIDADES
@@ -456,7 +507,13 @@ const DB = (()=>{
   return { open, all:()=>p(tx('readonly').getAll()), put:r=>p(tx('readwrite').put(r)), del:k=>p(tx('readwrite').delete(k)), clear:()=>p(tx('readwrite').clear()) };
 })();
 let RECS = [];
-async function reload(){ RECS = (await DB.all()).sort((a,b)=>(a.n||0)-(b.n||0)); refreshLists(); }
+let ALL=[];
+async function reload(){
+  ALL = await DB.all();
+  for(const r of ALL){ if(!r.proj){ r.proj=CFG.activeProj; await DB.put(r); } }  // encuestas de la versión anterior → proyecto activo
+  RECS = ALL.filter(r=>r.proj===CFG.activeProj).sort((a,b)=>(a.n||0)-(b.n||0));
+  refreshLists(); renderProjSheet();
+}
 
 /* ====================================================================
    FORMULARIO
@@ -468,7 +525,7 @@ const TXT_FIELDS = ['n','nombre','rut','fono','ocupacion','ingreso','habitantes'
 function blank(){
   const maxN = RECS.reduce((m,r)=>Math.max(m, r.n||0), 0);
   const lastSector = RECS.length ? (RECS.slice().sort((a,b)=>b.creado-a.creado)[0].sector||'') : '';
-  return { uid:uid(), n:maxN+1, tipo:'VIVIENDA', nombre:'', rut:'', fono:'', ocupacion:'', ingreso:'', ingresoNC:'', habitantes:'', hombres:'', mujeres:'',
+  return { uid:uid(), proj:CFG.activeProj, n:maxN+1, tipo:'VIVIENDA', nombre:'', rut:'', fono:'', ocupacion:'', ingreso:'', ingresoNC:'', habitantes:'', hombres:'', mujeres:'',
     sector:lastSector, ubic:null, camino:'', indigena:'NO', comunidad:'', tenencia:null, calidad:null, material:null, agua:null, sanitario:null, bano:null,
     energia:null, enfermedad:null, acepta:null, categoria:'AUTO', arranque:'', obs:'', obsTags:[], cabanas:'', lat:null, lon:null, acc:null, gpsN:0, gpsTs:null,
     firma:null, fotoTab:null, fotoEdi:null, tabEnEdif:false, encuestador:CFG.encuestador, creado:Date.now(), modificado:Date.now() };
@@ -573,7 +630,7 @@ async function saveCur(){
   const {errs,warns} = validate(cur);
   if(errs.length){ alert(errs.join('\n')); return; }
   if(warns.length && !confirm('Atención: '+warns.join(', ')+'.\n\n¿Guardar de todas formas?')) return;
-  cur.modificado = Date.now(); if(!cur.encuestador) cur.encuestador=CFG.encuestador;
+  cur.modificado = Date.now(); if(!cur.encuestador) cur.encuestador=CFG.encuestador; if(!cur.proj) cur.proj=CFG.activeProj;
   await DB.put(JSON.parse(JSON.stringify(cur)));
   await reload();
   toast(`Vivienda N° ${cur.n} guardada ✓`);
@@ -1133,33 +1190,82 @@ function printFichas(recs){ $('print').innerHTML = recs.map(fichaHTML).join('');
    RESPALDO / IMPORTACIÓN
    ==================================================================== */
 async function exportJson(){
-  const data={app:'encuestas-ssr',version:1,exportado:Date.now(),config:CFG,records:RECS};
+  const proj=PROJS.find(p=>p.id===CFG.activeProj);
+  const data={app:'encuestas-ssr',version:2,exportado:Date.now(),project:proj,config:CFG,records:RECS};
   await deliver(new Blob([JSON.stringify(data)],{type:'application/json'}), `respaldo_encuestas_${slug(CFG.ssr)}_${CFG.encuestador?slug(CFG.encuestador)+'_':''}${fileStamp()}.json`);
   CFG.lastBackup=Date.now(); saveCfg(); refreshLists();
 }
 async function importJson(file){
   let data; try{ data=JSON.parse(await file.text()); }catch(e){ alert('Archivo no válido.'); return; }
   if(!data||!Array.isArray(data.records)){ alert('El archivo no es un respaldo de esta app.'); return; }
+  // 1) ¿A qué proyecto pertenece el respaldo?
+  const src = data.project || pick(data.config||{},PROJ_KEYS);
+  let target = (data.project && PROJS.find(p=>p.id===data.project.id)) || findProjByName(src.ssr);
+  let creado=false;
+  if(!target){
+    const act=PROJS.find(p=>p.id===CFG.activeProj);
+    if(act && !act.ssr && !RECS.length){ Object.assign(act, pick(src,PROJ_KEYS), {lastBackup:0}); target=act; }   // proyecto activo vacío: se reutiliza
+    else { target=createProject(Object.assign(pick(src,PROJ_KEYS),{lastBackup:0, id: data.project&&data.project.id})); creado=true; }
+  }
+  // 2) Combinar encuestas (por id único; gana la versión más reciente)
+  const inTarget=ALL.filter(r=>r.proj===target.id);
   let nuevos=0, act=0, conflictos=[];
-  for(const r of data.records){
-    const ex=RECS.find(x=>x.uid===r.uid);
+  for(const r0 of data.records){
+    const r=Object.assign({},r0,{proj:target.id});
+    const ex=ALL.find(x=>x.uid===r.uid);
     if(ex){ if((r.modificado||0)>(ex.modificado||0)){ await DB.put(r); act++; } continue; }
-    const dupN=RECS.find(x=>x.n===r.n); if(dupN) conflictos.push(r.n);
+    if(inTarget.find(x=>x.n===r.n)) conflictos.push(r.n);
     await DB.put(r); nuevos++;
   }
-  if(data.config && !RECS.length && confirm('¿Usar también la configuración del proyecto que viene en el respaldo?')){ const keep={devId:CFG.devId,encuestador:CFG.encuestador,lastBackup:CFG.lastBackup}; CFG=Object.assign({},DEF_CFG,data.config,keep); saveCfg(); fillCfg(); }
+  saveCfg();
+  if(target.id===CFG.activeProj){ Object.assign(CFG, pick(target,PROJ_KEYS)); saveCfg(); fillCfg(); }
   await reload();
-  alert(`Importación lista: ${nuevos} nuevas, ${act} actualizadas.` + (conflictos.length?`\n\nOjo: N° de vivienda repetidos (de otro encuestador): ${[...new Set(conflictos)].join(', ')}. Revíselos en el listado.`:''));
+  alert(`Importación lista en ${projName(target)}${creado?' (proyecto nuevo)':''}: ${nuevos} nuevas, ${act} actualizadas.` + (conflictos.length?`\n\nOjo: N° de vivienda repetidos (de otro encuestador): ${[...new Set(conflictos)].join(', ')}. Revíselos en el listado.`:''));
+  if(target.id!==CFG.activeProj && confirm(`¿Abrir ahora el proyecto ${projName(target)}?`)) await switchProject(target.id);
 }
+
+/* ====================================================================
+   SELECTOR DE PROYECTOS
+   ==================================================================== */
+function renderProjSheet(){
+  const show=$('pjShowArch').checked;
+  const list=PROJS.filter(p=>show||!p.archived||p.id===CFG.activeProj).sort((a,b)=>(a.archived-b.archived)||(b.creado-a.creado));
+  $('pjList').innerHTML=list.map(p=>{
+    const n=ALL.filter(r=>r.proj===p.id).length, isA=p.id===CFG.activeProj;
+    return `<div class="pj${isA?' act':''}" data-id="${p.id}"><div class="main"><div class="nm">${esc(projName(p))}${isA?'<span class="badge" style="background:var(--pri);color:#fff">activo</span>':''}${p.archived?'<span class="badge">archivado</span>':''}</div>
+      <div class="mut">${esc([p.comuna,p.region].filter(Boolean).join(' · ')||'—')} · ${n} encuesta${n===1?'':'s'}</div></div>
+      ${isA?'':'<button data-a="open">Abrir</button>'}<button data-a="arch">${p.archived?'Restaurar':'Archivar'}</button>${isA?'':'<button data-a="del" style="color:var(--bad)">🗑</button>'}</div>`;
+  }).join('') || '<p class="mut">No hay proyectos.</p>';
+}
+function openProjSheet(){ renderProjSheet(); $('projSheet').classList.remove('hide'); }
+$('hTitle').onclick=openProjSheet; $('bProj').onclick=openProjSheet;
+$('pjClose').onclick=()=>$('projSheet').classList.add('hide');
+$('projSheet').onclick=e=>{ if(e.target.id==='projSheet') $('projSheet').classList.add('hide'); };
+$('pjShowArch').onchange=renderProjSheet;
+$('pjList').onclick=async e=>{
+  const b=e.target.closest('button'); if(!b) return; const id=b.closest('.pj').dataset.id, p=PROJS.find(x=>x.id===id), a=b.dataset.a;
+  if(a==='open'){ if(cur&&curIsNew&&(cur.nombre||cur.firma||cur.fotoEdi)&&!confirm('Hay una encuesta sin guardar. ¿Cambiar de proyecto igual?')) return; await switchProject(id); $('projSheet').classList.add('hide'); showTab('t-form'); }
+  if(a==='arch'){ p.archived=!p.archived; saveCfg(); renderProjSheet(); toast(p.archived?'Proyecto archivado (sus datos se conservan)':'Proyecto restaurado'); }
+  if(a==='del'){ const recs=ALL.filter(r=>r.proj===id);
+    if(!confirm(`¿Eliminar ${projName(p)} y sus ${recs.length} encuestas de este teléfono? No se puede deshacer.`)) return;
+    if(recs.length && prompt('Escriba BORRAR para confirmar')!=='BORRAR') return;
+    for(const r of recs) await DB.del(r.uid); PROJS=PROJS.filter(x=>x.id!==id); saveCfg(); await reload(); toast('Proyecto eliminado'); }
+};
+$('pjNew').onclick=async()=>{
+  const name=(prompt('Nombre corto del SSR (ej: CURIÑANCO)')||'').trim().toUpperCase(); if(!name) return;
+  if(findProjByName(name) && !confirm('Ya existe un proyecto con ese nombre. ¿Crear otro igual?')) return;
+  const p=createProject({ssr:name, proyecto:`DISEÑO DE INGENIERÍA PARA EL SSR ${name}. COMUNA DE ___. REGIÓN DE ___`});
+  await switchProject(p.id); $('projSheet').classList.add('hide'); showTab('t-cfg'); toast('Proyecto creado: complete sus datos',3000);
+};
 
 /* ====================================================================
    CONFIGURACIÓN
    ==================================================================== */
 const CFG_FIELDS=['proyecto','ssr','comuna','region','ut','encuestador','profesional','empresa','obsList','r1','r2','r3','acc','nread'];
-function fillCfg(){ CFG_FIELDS.forEach(k=>$('c_'+k).value=CFG[k]??''); $('hTitle').textContent=CFG.ssr?('SSR '+CFG.ssr):'Encuestas SSR'; }
-CFG_FIELDS.forEach(k=>$('c_'+k).addEventListener('change',e=>{ let v=e.target.value.trim(); if(['r1','r2','r3','acc','nread'].includes(k)) v=num(v)||DEF_CFG[k]; CFG[k]=v; saveCfg(); fillCfg(); if(k==='obsList') renderObsTags(); if(cur) onFormChange(); }));
+function fillCfg(){ CFG_FIELDS.forEach(k=>$('c_'+k).value=CFG[k]??''); $('hTitle').innerHTML=esc(CFG.ssr?('SSR '+CFG.ssr):'Proyecto sin nombre')+'<small>▾</small>'; }
+CFG_FIELDS.forEach(k=>$('c_'+k).addEventListener('change',e=>{ let v=e.target.value.trim(); if(['r1','r2','r3','acc','nread'].includes(k)) v=num(v)||DEF_CFG[k]; CFG[k]=v; saveCfg(); fillCfg(); renderProjSheet(); if(k==='obsList') renderObsTags(); if(cur) onFormChange(); }));
 async function storInfo(){
-  let t=`${RECS.length} encuestas guardadas en este teléfono.`;
+  let t=`Este proyecto: ${RECS.length} encuestas. Total en el teléfono: ${ALL.length} encuestas en ${PROJS.length} proyecto${PROJS.length===1?'':'s'}.`;
   try{ if(navigator.storage&&navigator.storage.estimate){ const e=await navigator.storage.estimate(); t+=` Espacio usado: ${(e.usage/1048576).toFixed(1)} MB.`; }
        if(navigator.storage&&navigator.storage.persisted){ const p=await navigator.storage.persisted(); t+= p?' Almacenamiento protegido ✓.':' Almacenamiento no protegido: haga respaldos seguido.'; } }catch(e){}
   $('storInfo').textContent=t;
@@ -1193,7 +1299,7 @@ $('xPrint').onclick=()=>{ if(need()) printFichas(RECS); };
 $('xJson').onclick=()=>{ if(need()) exportJson(); };
 $('xImp').onclick=()=>{ $('impIn').value=''; $('impIn').click(); };
 $('impIn').onchange=e=>{ if(e.target.files[0]) importJson(e.target.files[0]); };
-$('bWipe').onclick=async()=>{ if(!RECS.length) return; if(!confirm(`Se borrarán ${RECS.length} encuestas de este teléfono. ¿Ya hizo un respaldo?`)) return; if(prompt('Escriba BORRAR para confirmar')!=='BORRAR') return; await DB.clear(); await reload(); newForm(); storInfo(); toast('Encuestas borradas'); };
+$('bWipe').onclick=async()=>{ if(!RECS.length) return; if(!confirm(`Se borrarán las ${RECS.length} encuestas de ${projName(CFG)}. Los otros proyectos no se tocan. ¿Ya hizo un respaldo?`)) return; if(prompt('Escriba BORRAR para confirmar')!=='BORRAR') return; for(const r of RECS) await DB.del(r.uid); await reload(); newForm(); storInfo(); toast('Encuestas borradas'); };
 window.addEventListener('resize',()=>{ sigSetup(); if(curTab==='t-map') drawMap(); });
 window.addEventListener('beforeunload',e=>{ if(cur && (cur.nombre||cur.firma||cur.fotoEdi) && curIsNew){ e.preventDefault(); e.returnValue=''; } });
 
@@ -1208,6 +1314,7 @@ window.addEventListener('beforeunload',e=>{ if(cur && (cur.nombre||cur.firma||cu
   try{ if(navigator.storage&&navigator.storage.persist) await navigator.storage.persist(); }catch(e){}
   if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
   if(!CFG.ssr) { showTab('t-cfg'); toast('Primero configure el proyecto',3000); }
+  else if(PROJS.filter(p=>!p.archived).length>1) toast('Proyecto activo: '+projName(CFG),2500);
 })();
 </script>
 </body>
