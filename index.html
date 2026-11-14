@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0a1fc8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Encuestas SSR</title>
+<style>
+:root{--pri:#0a1fc8;--pri2:#2f45e0;--bg:#f2f4f6;--card:#fff;--txt:#1d2329;--mut:#66727d;--ok:#1f8a4c;--warn:#c27a00;--bad:#c0392b;--bd:#d5dbe0;--ben:#1f8a4c;--pos:#c27a00;--nob:#c0392b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:20;background:var(--pri);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:10px}
+#hLogo{height:34px;background:#fff;border-radius:5px;padding:2px}
+header h1{font-size:16px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gpsBadge{font-size:12px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,.18);white-space:nowrap}
+#gpsBadge.ok{background:var(--ok)}#gpsBadge.warn{background:var(--warn)}#gpsBadge.bad{background:var(--bad)}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;background:#fff;border-top:1px solid var(--bd)}
+nav button{flex:1;border:0;background:none;padding:8px 2px 10px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--pri);font-weight:600}
+main{padding:10px 10px 90px;max-width:760px;margin:0 auto}
+section.tab{display:none}section.tab.on{display:block}
+.card{background:var(--card);border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.card h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--pri);margin:0 0 8px}
+label.f{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px}
+input[type=text],input[type=number],input[type=tel],input[type=search],textarea,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;font-size:16px;background:#fff;color:var(--txt)}
+textarea{min-height:60px;resize:vertical}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--bd);background:#fff;border-radius:18px;padding:7px 12px;font-size:14px;color:var(--txt)}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn{border:0;border-radius:8px;padding:11px 14px;font-size:15px;font-weight:600;background:var(--pri);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.sec{background:#e3eaef;color:var(--pri)}.btn.bad{background:var(--bad)}.btn.ok{background:var(--ok)}
+.btn.w{width:100%}.btn:disabled{opacity:.5}
+.btns{display:flex;gap:8px;flex-wrap:wrap}.btns .btn{flex:1}
+.mut{color:var(--mut);font-size:12px}
+.warnbox{background:#fff6e0;border:1px solid #f0d08a;color:#7a5200;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
+.errbox{background:#fdecea;border:1px solid #f1b0a9;color:#8a2116;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
+.okbox{background:#e7f6ec;border:1px solid #a9dcb9;color:#145c32;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
+.gpsval{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.photos{display:flex;gap:8px}
+.photo{flex:1;border:1px dashed var(--bd);border-radius:8px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#fafbfc;font-size:13px;color:var(--mut);text-align:center;padding:4px}
+.photo img{max-width:100%;max-height:220px;border-radius:6px}
+.photo .x{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:50%;width:26px;height:26px;font-size:15px}
+.photo.off{opacity:.45}
+canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;background:#fff;touch-action:none}
+.decl{font-size:13px;background:#f7f9fa;border-radius:8px;padding:8px 10px;color:#333}
+.list .it{display:flex;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid #eef1f3}
+.list .n{font-weight:700;min-width:38px;text-align:center;font-size:17px;color:var(--pri)}
+.list .main{flex:1;min-width:0}.list .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.tag{font-size:11px;padding:1px 6px;border-radius:8px;background:#eef1f3;color:var(--mut)}
+.tag.ok{background:#e1f3e8;color:var(--ok)}.tag.no{background:#fbe6e3;color:var(--bad)}
+#mapc{width:100%;height:62vh;background:#e9eef1;border-radius:10px;touch-action:none}
+.legend{display:flex;gap:12px;font-size:12px;flex-wrap:wrap;margin-top:6px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat div{background:#f4f7f9;border-radius:8px;padding:8px;text-align:center}.stat b{display:block;font-size:20px;color:var(--pri)}
+.stat span{font-size:11px;color:var(--mut)}
+#toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:50;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%}
+#toast.on{opacity:.95}
+.hide{display:none!important}
+.sticky-save{position:sticky;bottom:64px;z-index:10;background:linear-gradient(transparent,var(--bg) 30%);padding-top:14px}
+#print{display:none}
+@media print{
+  body *{visibility:hidden}
+  #print,#print *{visibility:visible}
+  #print{display:block;position:absolute;left:0;top:0;width:100%}
+  header,nav,main{display:none}
+  .ficha{page-break-after:always;font:11pt Arial,sans-serif;color:#000}
+}
+.ficha{padding:10mm 12mm}
+.ficha h3{text-align:center;margin:0 0 6px;font-size:13pt}
+.ficha table{width:100%;border-collapse:collapse;font-size:9.5pt}
+.ficha td{border:1px solid #000;padding:3px 5px;vertical-align:top}
+.ficha .dj{font-size:10pt;margin-top:10px;text-align:justify}
+.ficha .firma{text-align:center;margin-top:8px}
+.ficha .firma img{height:70px}
+</style>
+</head>
+<body>
+<header>
+  <img id="hLogo" alt="IV Ingeniería">
+  <h1 id="hTitle">Encuestas SSR</h1>
+  <span id="gpsBadge">GPS —</span>
+</header>
+
+<main>
+<!-- ============ ENCUESTA ============ -->
+<section class="tab on" id="t-form">
+  <div class="card">
+    <div class="row">
+      <div style="flex:0 0 110px"><label class="f">N° vivienda</label><input type="number" id="f_n" inputmode="numeric"></div>
+      <div><label class="f">Tipo de edificación</label><div class="chips" data-k="tipo"></div></div>
+    </div>
+    <div id="dupWarn" class="warnbox hide"></div>
+  </div>
+
+  <div class="card">
+    <h2>Georreferenciación</h2>
+    <div class="gpsval" id="gpsLive">Esperando señal GPS…</div>
+    <div class="btns" style="margin-top:8px">
+      <button class="btn" id="bGps">📍 Capturar ubicación</button>
+    </div>
+    <div id="gpsSaved" class="mut" style="margin-top:6px"></div>
+    <details style="margin-top:6px"><summary class="mut">Ingresar coordenadas a mano</summary>
+      <div class="row"><div><label class="f">Latitud</label><input type="text" id="f_lat" inputmode="decimal"></div><div><label class="f">Longitud</label><input type="text" id="f_lon" inputmode="decimal"></div></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Registro fotográfico</h2>
+    <div class="photos">
+      <div class="photo" id="ph_tab"></div>
+      <div class="photo" id="ph_edi"></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="f_tabEnEdif"> La tablilla se ve en la foto de la edificación (basta una foto)</label>
+    <input type="file" id="fileIn" accept="image/*" capture="environment" class="hide">
+  </div>
+
+  <div id="secOcup">
+  <div class="card">
+    <h2>Datos ocupantes</h2>
+    <label class="f">Nombre</label><input type="text" id="f_nombre" autocapitalize="characters">
+    <div class="row">
+      <div><label class="f">R.U.T.</label><input type="text" id="f_rut" autocapitalize="characters" placeholder="12.345.678-9"></div>
+      <div><label class="f">N° celular</label><input type="tel" id="f_fono"></div>
+    </div>
+    <div id="rutWarn" class="warnbox hide"></div>
+    <label class="f">Ocupación / actividad</label><input type="text" id="f_ocupacion" list="dlOcup" autocapitalize="characters">
+    <label class="f">Ingresos ($/mes)</label>
+    <div class="row"><input type="number" id="f_ingreso" inputmode="numeric"><div class="chips" data-k="ingresoNC" style="flex:0 0 auto"></div></div>
+    <div class="mut" id="ingCode"></div>
+    <div class="row">
+      <div><label class="f">Habitantes</label><input type="number" id="f_habitantes" inputmode="numeric"></div>
+      <div><label class="f">N° hombres</label><input type="number" id="f_hombres" inputmode="numeric"></div>
+      <div><label class="f">N° mujeres</label><input type="number" id="f_mujeres" inputmode="numeric"></div>
+    </div>
+    <div id="habWarn" class="warnbox hide"></div>
+    <label class="f">Sector</label><input type="text" id="f_sector" list="dlSector" autocapitalize="characters">
+    <label class="f">Ubicación vivienda</label><div class="chips" data-k="ubic"></div>
+    <label class="f">Nombre camino</label><input type="text" id="f_camino" autocapitalize="characters">
+    <label class="f">Pertenece a una comunidad indígena</label><div class="chips" data-k="indigena"></div>
+    <input type="text" id="f_comunidad" placeholder="Nombre de la comunidad" class="hide" style="margin-top:6px" autocapitalize="characters">
+  </div>
+
+  <div class="card">
+    <h2>Datos vivienda</h2>
+    <label class="f">(1) Tenencia</label><div class="chips" data-k="tenencia"></div>
+    <label class="f">(2) Calidad</label><div class="chips" data-k="calidad"></div>
+    <label class="f">(3) Material vivienda</label><div class="chips" data-k="material"></div>
+    <label class="f">(4) Abastecimiento de agua actual</label><div class="chips" data-k="agua"></div>
+    <label class="f">(5) Servicio sanitario</label><div class="chips" data-k="sanitario"></div>
+    <label class="f">(6) Ubicación baño</label><div class="chips" data-k="bano"></div>
+    <label class="f">(7) Energía eléctrica</label><div class="chips" data-k="energia"></div>
+    <label class="f">(8) Enfermedad entérica</label><div class="chips" data-k="enfermedad"></div>
+  </div>
+
+  <div class="card">
+    <h2>Declaración jurada</h2>
+    <label class="f">Acepta el sistema</label><div class="chips" data-k="acepta"></div>
+    <div class="decl" id="declTxt" style="margin-top:8px"></div>
+    <label class="f">Arranque lejano: distancia aprox. del medidor (m) — dejar vacío si no aplica</label>
+    <input type="number" id="f_arranque" inputmode="numeric">
+    <label class="f">Firma del encuestado</label>
+    <canvas id="sig"></canvas>
+    <div class="btns" style="margin-top:6px"><button class="btn sec" id="bSigClr">Borrar firma</button></div>
+  </div>
+  </div>
+
+  <div class="card">
+    <h2>Observaciones y antecedentes</h2>
+    <label class="f">Marcar lo que aplique (se pueden varias)</label>
+    <div class="chips" id="obsTags"></div>
+    <div id="cabBox" class="hide"><label class="f">N° de cabañas / edificaciones asociadas</label><input type="number" id="f_cabanas" inputmode="numeric"></div>
+    <label class="f">Detalle u otros antecedentes</label>
+    <textarea id="f_obs" placeholder="Ej: 3 cabañas de arriendo en verano, uso de agua para animales, propietario vive en Castro…"></textarea>
+    <div class="mut">Tip: use el micrófono del teclado para dictar.</div>
+  </div>
+
+  <div class="card">
+    <h2>Clasificación</h2>
+    <label class="f">Categoría en KMZ</label><div class="chips" data-k="categoria"></div>
+    <div class="mut" id="catAuto"></div>
+  </div>
+
+  <div class="sticky-save">
+    <div class="btns">
+      <button class="btn sec" id="bNew">Nueva</button>
+      <button class="btn ok" id="bSave" style="flex:2">💾 Guardar encuesta</button>
+    </div>
+    <div id="editInfo" class="mut" style="text-align:center;margin-top:4px"></div>
+  </div>
+</section>
+
+<!-- ============ LISTADO ============ -->
+<section class="tab" id="t-list">
+  <div class="card">
+    <div class="stat" id="stats"></div>
+  </div>
+  <div class="card">
+    <input type="search" id="q" placeholder="Buscar por N°, nombre, RUT o sector">
+    <div class="list" id="list"></div>
+  </div>
+</section>
+
+<!-- ============ MAPA ============ -->
+<section class="tab" id="t-map">
+  <div class="card">
+    <canvas id="mapc"></canvas>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--ben)"></i>Beneficiaria</span>
+      <span><i class="dot" style="background:var(--pos)"></i>Postergada</span>
+      <span><i class="dot" style="background:var(--nob)"></i>No beneficiaria</span>
+      <span><i class="dot" style="background:#2b7bff"></i>Mi posición</span>
+    </div>
+    <div class="btns" style="margin-top:8px">
+      <button class="btn sec" id="mZin">＋</button><button class="btn sec" id="mZout">－</button><button class="btn sec" id="mFit">Ajustar</button><button class="btn sec" id="mMe">Mi posición</button>
+    </div>
+    <p class="mut">Croquis sin conexión: muestra la posición relativa de las viviendas levantadas (sin mapa de fondo). Toque un punto para abrir la encuesta. Escala aproximada en la esquina.</p>
+  </div>
+</section>
+
+<!-- ============ EXPORTAR ============ -->
+<section class="tab" id="t-exp">
+  <div class="card">
+    <h2>Productos</h2>
+    <div class="btns" style="flex-direction:column">
+      <button class="btn w" id="xXlsx">📊 Base de datos Excel (.xlsx)</button>
+      <button class="btn w" id="xKmz">🌎 Edificaciones Google Earth (.kmz)</button>
+      <button class="btn w" id="xDocx">📷 Informe registro fotográfico (Word)</button>
+      <button class="btn w sec" id="xPrint">🖨️ Fichas de encuesta (imprimir / PDF)</button>
+    </div>
+    <p class="mut">En el celular, cada archivo se puede compartir directo (WhatsApp, correo, Drive) o se guarda en Descargas.</p>
+  </div>
+  <div class="card">
+    <h2>Respaldo y trabajo en equipo</h2>
+    <p class="mut" id="bkInfo"></p>
+    <div class="btns">
+      <button class="btn" id="xJson">⬇️ Respaldo (.json)</button>
+      <button class="btn sec" id="xImp">⬆️ Importar respaldo</button>
+    </div>
+    <input type="file" id="impIn" accept=".json,application/json" class="hide">
+    <p class="mut">Si trabajan varios encuestadores, cada uno exporta su respaldo y uno los importa todos en su teléfono o computador: se combinan sin duplicar. El respaldo incluye fotos y firmas.</p>
+  </div>
+</section>
+
+<!-- ============ CONFIG ============ -->
+<section class="tab" id="t-cfg">
+  <div class="card">
+    <h2>Proyecto</h2>
+    <label class="f">Nombre del proyecto (encabezado de Excel e informe)</label><textarea id="c_proyecto"></textarea>
+    <label class="f">Nombre corto del SSR (para la declaración jurada)</label><input type="text" id="c_ssr">
+    <div class="row">
+      <div><label class="f">Comuna</label><input type="text" id="c_comuna"></div>
+      <div><label class="f">Región</label><input type="text" id="c_region"></div>
+    </div>
+    <label class="f">Institución responsable (unidad técnica)</label><input type="text" id="c_ut">
+    <div class="row">
+      <div><label class="f">Encuestador</label><input type="text" id="c_encuestador"></div>
+      <div><label class="f">Profesional a cargo (informe)</label><input type="text" id="c_profesional"></div>
+    </div>
+    <label class="f">Empresa (aparece junto al logo en informes)</label><input type="text" id="c_empresa">
+  </div>
+  <div class="card">
+    <h2>Observaciones rápidas</h2>
+    <label class="f">Una por línea (aparecen como botones en la encuesta)</label>
+    <textarea id="c_obsList" style="min-height:150px"></textarea>
+  </div>
+  <div class="card">
+    <h2>Rangos de ingreso ($/mes)</h2>
+    <div class="row">
+      <div><label class="f">Tope rango 1</label><input type="number" id="c_r1"></div>
+      <div><label class="f">Tope rango 2</label><input type="number" id="c_r2"></div>
+      <div><label class="f">Tope rango 3</label><input type="number" id="c_r3"></div>
+    </div>
+    <p class="mut">Código 4 = mayor al tope 3; código 5 = no contesta.</p>
+  </div>
+  <div class="card">
+    <h2>GPS</h2>
+    <div class="row">
+      <div><label class="f">Precisión objetivo (m)</label><input type="number" id="c_acc"></div>
+      <div><label class="f">Lecturas a promediar</label><input type="number" id="c_nread"></div>
+    </div>
+    <p class="mut">El GPS del teléfono funciona sin señal de celular ni internet. Al aire libre y lejos de techos tarda 10–60 s en llegar a 3–5 m.</p>
+  </div>
+  <div class="card">
+    <h2>Datos del teléfono</h2>
+    <p class="mut" id="storInfo"></p>
+    <button class="btn bad w" id="bWipe">Borrar todas las encuestas de este teléfono</button>
+  </div>
+  <p class="mut" style="text-align:center">Encuestas SSR · v1.0</p>
+</section>
+</main>
+
+<nav>
+  <button data-t="t-form" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4h6M9 4a2 2 0 0 0-2 2H5v15h14V6h-2a2 2 0 0 0-2-2M9 12h6M9 16h4"/></svg>Encuesta</button>
+  <button data-t="t-list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Listado</button>
+  <button data-t="t-map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Mapa</button>
+  <button data-t="t-exp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar</button>
+  <button data-t="t-cfg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
+</nav>
+<datalist id="dlSector"></datalist><datalist id="dlOcup"></datalist>
+<div id="toast"></div>
+<div id="print"></div>
+
+<script>
+'use strict';
+/* ====================================================================
+   CONSTANTES Y CONFIGURACIÓN
+   ==================================================================== */
+const OPC = {
+  tipo:[['VIVIENDA','Vivienda'],['SM','Sin moradores'],['PUBLICO','Público'],['COMERCIO','Comercio'],['OTRO','Otro']],
+  ingresoNC:[['1','No contesta']],
+  ubic:[[1,'Camino vecinal'],[2,'Ruta vialidad'],[3,'Camino privado']],
+  indigena:[['SI','Sí'],['NO','No']],
+  tenencia:[[1,'Propia'],[2,'Arriendo'],[3,'Otro']],
+  calidad:[['B','Bueno'],['R','Regular'],['M','Malo']],
+  material:[[1,'Sólida'],[2,'Madera'],[3,'Mixta']],
+  agua:[[1,'Agua potable'],[2,'Noria'],[3,'Vertiente'],[4,'Pozo'],[5,'Aljibe'],[6,'Otra']],
+  sanitario:[[1,'Alcantarillado'],[2,'Fosa séptica'],[3,'Pozo negro'],[4,'Otro']],
+  bano:[[1,'Fuera'],[2,'Dentro']],
+  energia:[['SI','Sí'],['NO','No']],
+  enfermedad:[['SI','Sí'],['NO','No']],
+  acepta:[['SI','Sí acepta'],['NO','No acepta']],
+  categoria:[['AUTO','Automática'],['BEN','Beneficiaria'],['POS','Postergada'],['NOB','No beneficiaria']],
+};
+const LOGO={src:'data:image/png;base64,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',w:360,h:553};
+const LOGO_HDR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAABOBAMAAACOOGiLAAAAMFBMVEX////+/v/8/P/v7/+bm/9dXf9BQf83N/8nJ/8ZGf8LC/8HB/8EBP8DA/8BAf8AAP9AY6ytAAADGUlEQVR42n2WvW8cRRiHn5lboXwod7P+QpzN7eUSCYUicaRQBl2kKCUGAQ1FOhqa/AnUqaK0blwkSgEyoYgUCdkkkegQVmLRpIi9eydRYOKdXSQgYM9Q7Pl29rxz29xqnntmfvPO3Nzw9a6d8kimPgFoVdNuYhBnCeDMRg2+3hvZ+sHzGnwb4AcRwPCbGnztKQQQgNoXk9D+l/dg7lk/AMJj2Pzz3NANNUHtfLLfgOwS1M87+66JzPtH2Ooq1j8qEEfYJs0Kt0sa7PmiaiC61crZ0y8s0Xxc2NZ8duNJRTcC6OkR/nv957suzh+CyJdVgRtrvd7LjoN31zuI/JYajf3aZG+5fYcZIOwomj036LSdytl2qmleEBSdm08vDj9InGB/bGvUQjKy5Zsvf7rj2LIF0NJvj8rS/OqBI5PcsYjhNTXqHPl6q+tG+yVChDe7R1VjdtalrRjI9MwYVxf7ZKbptEOoX9DDRCPmkxJXFlQ+AdIiTIGFu2Dxegf558dq9DPAvFnh1PflxGNAXG0wjrbBh2VJF7XGzgpK3Kts4m1DtJg5yWPjcgXMZY7tPvn9FPI+1M873oyQ2Yry2CoDZCTrbfPObow9h6dzeziA6L3cg+UOgIo9OFlrIYZ9hSfaVisV4qas2uO6LGlApNVo2h59bW8Q07wy40ve1BAuJNSPnT+yYFt47HQ9Qg4/UR5baCD8SNbbtq01NnfP1Ao+2DZEi8IzdpYqYO6Fx87uGciWlcfWWwqZr6h6274bA+Jiw4NPJyn2fLnlJzo/zCCazzw4fwjQ82G92UQMlvGVJVFayFuese1iqkEYj232tg3NC45SsUVLQbiQefBgLQXbij1Yb0aIci9Mjt3VIMq94NgCMCcTDXnKcdukAnMiMXTaMzXYzgC/Aswn3Rr8LYjHnRjd5bit924Dh3p8oE3Yr8aludqowbIL7JcH2mTyneIzWioONAen/zoNs2VJdYHn/nLS9i+PX0+8JID91YOdcVPj1Or4/eB9AtSlDT4vbecaIr6A6beewNqdyp+BmzskEGenXop+X52G/weA6ExsxB9sFQAAAABJRU5ErkJggg==';
+const CAT_NAME = {BEN:'VIVIENDAS BENEFICIARIAS',POS:'VIVIENDAS POSTERGADAS',NOB:'VIVIENDAS NO BENEFICIARIAS'};
+const CAT_SHORT = {BEN:'Beneficiaria',POS:'Postergada',NOB:'No beneficiaria'};
+const CAT_COLOR = {BEN:'#1f8a4c',POS:'#c27a00',NOB:'#c0392b'};
+const DEF_CFG = {
+  proyecto:'DISEÑO DE INGENIERÍA PARA EL MEJORAMIENTO Y AMPLIACIÓN DEL SSR ___. COMUNA DE ___. REGIÓN DE ___',
+  ssr:'', comuna:'', region:'', ut:'ILUSTRE MUNICIPALIDAD DE ___', encuestador:'', profesional:'', empresa:'IV INGENIERÍA',
+  obsList:'CABAÑAS ASOCIADAS\nMÁS DE UNA VIVIENDA EN EL PREDIO\nCASA DE VERANEO / USO TEMPORAL\nNEGOCIO O LOCAL EN LA VIVIENDA\nUSO AGRÍCOLA O ANIMALES\nPROPIETARIO NO RESIDE\nACCESO DIFÍCIL\nCONSTRUCCIÓN EN CURSO\nVOLVER A VISITAR',
+  r1:440000, r2:700000, r3:1050000, acc:5, nread:8, lastBackup:0, devId:''
+};
+let CFG = loadCfg();
+function loadCfg(){
+  let c={};
+  try{ c = JSON.parse(localStorage.getItem('ssr_cfg')||'{}'); }catch(e){}
+  c = Object.assign({}, DEF_CFG, c);
+  if(!c.devId){ c.devId = Math.random().toString(36).slice(2,7); try{localStorage.setItem('ssr_cfg',JSON.stringify(c));}catch(e){} }
+  return c;
+}
+function saveCfg(){ try{ localStorage.setItem('ssr_cfg', JSON.stringify(CFG)); }catch(e){} }
+
+/* ====================================================================
+   UTILIDADES
+   ==================================================================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+const xesc = s => String(s==null?'':s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg, ms=2200){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'), ms); }
+function uid(){ return CFG.devId+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6); }
+function num(v){ if(v===''||v==null) return null; const n=Number(String(v).replace(',','.')); return isFinite(n)?n:null; }
+function fmtDate(ts){ const d=new Date(ts); const p=n=>String(n).padStart(2,'0'); return `${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function fileStamp(){ const d=new Date(); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
+function slug(s){ return String(s||'SSR').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,40)||'SSR'; }
+
+// RUT chileno
+function rutClean(r){ return String(r||'').toUpperCase().replace(/[^0-9K]/g,''); }
+function rutDV(body){ let s=0,m=2; for(let i=body.length-1;i>=0;i--){ s+=Number(body[i])*m; m=m===7?2:m+1; } const r=11-(s%11); return r===11?'0':r===10?'K':String(r); }
+function rutValid(r){ const c=rutClean(r); if(c.length<2) return false; const b=c.slice(0,-1), d=c.slice(-1); return /^\d+$/.test(b) && rutDV(b)===d; }
+function rutFormat(r){ const c=rutClean(r); if(c.length<2) return String(r||'').toUpperCase(); const b=c.slice(0,-1), d=c.slice(-1); return b.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+d; }
+
+// Código de ingreso
+function ingresoCode(r){
+  if(r.ingresoNC) return 5;
+  const v = num(r.ingreso); if(v==null) return null;
+  if(v<=CFG.r1) return 1; if(v<=CFG.r2) return 2; if(v<=CFG.r3) return 3; return 4;
+}
+function ingresoRangos(){
+  const f=n=>Number(n).toLocaleString('es-CL');
+  return [[1,`0-${f(CFG.r1)}`],[2,`${f(CFG.r1+1)}-${f(CFG.r2)}`],[3,`${f(CFG.r2+1)}-${f(CFG.r3)}`],[4,`MAYOR A ${f(CFG.r3)}`],[5,'NO CONTESTA']];
+}
+
+// Categoría para KMZ / listas
+function catOf(r){
+  if(r.categoria && r.categoria!=='AUTO') return r.categoria;
+  if(r.tipo==='SM') return 'POS';
+  if(r.acepta==='NO' || r.tipo==='COMERCIO') return 'NOB';
+  if(r.acepta==='SI') return 'BEN';
+  return 'POS';
+}
+
+// Lat/Lon WGS84 -> UTM
+function toUTM(lat, lon){
+  const a=6378137, f=1/298.257223563, k0=0.9996, e2=f*(2-f), ep2=e2/(1-e2);
+  const zone=Math.floor((lon+180)/6)+1, lon0=((zone-1)*6-180+3)*Math.PI/180;
+  const φ=lat*Math.PI/180, λ=lon*Math.PI/180;
+  const N=a/Math.sqrt(1-e2*Math.sin(φ)**2), T=Math.tan(φ)**2, C=ep2*Math.cos(φ)**2, A=Math.cos(φ)*(λ-lon0);
+  const M=a*((1-e2/4-3*e2*e2/64-5*e2**3/256)*φ-(3*e2/8+3*e2*e2/32+45*e2**3/1024)*Math.sin(2*φ)+(15*e2*e2/256+45*e2**3/1024)*Math.sin(4*φ)-(35*e2**3/3072)*Math.sin(6*φ));
+  let E=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep2)*A**5/120)+500000;
+  let Nn=k0*(M+N*Math.tan(φ)*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720));
+  if(lat<0) Nn+=10000000;
+  return {E:Math.round(E*100)/100, N:Math.round(Nn*100)/100, zone:zone+(lat<0?'S':'N')};
+}
+
+/* ====================================================================
+   ZIP (sin compresión) — sirve para XLSX, KMZ y DOCX
+   ==================================================================== */
+const CRC_T = (()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+const enc = new TextEncoder();
+function makeZip(files){ // files: [{name, data: string|Uint8Array}]
+  const parts=[], central=[]; let offset=0;
+  const d=new Date(), dosTime=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1), dosDate=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  for(const f of files){
+    const name=enc.encode(f.name), data= typeof f.data==='string' ? enc.encode(f.data) : f.data;
+    const crc=crc32(data), h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint16(8,0,true);
+    h.setUint16(10,dosTime,true); h.setUint16(12,dosDate,true); h.setUint32(14,crc,true);
+    h.setUint32(18,data.length,true); h.setUint32(22,data.length,true); h.setUint16(26,name.length,true); h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer), name, data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint16(10,0,true);
+    c.setUint16(12,dosTime,true); c.setUint16(14,dosDate,true); c.setUint32(16,crc,true); c.setUint32(20,data.length,true); c.setUint32(24,data.length,true);
+    c.setUint16(28,name.length,true); c.setUint16(30,0,true); c.setUint16(32,0,true); c.setUint16(34,0,true); c.setUint16(36,0,true); c.setUint32(38,0,true); c.setUint32(42,offset,true);
+    central.push(new Uint8Array(c.buffer), name);
+    offset += 30+name.length+data.length;
+  }
+  const cdSize = central.reduce((s,p)=>s+p.length,0);
+  const e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,cdSize,true); e.setUint32(16,offset,true);
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)], {type:'application/zip'});
+}
+function dataURLtoU8(du){ const b=atob(du.split(',')[1]); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
+
+async function deliver(blob, filename){
+  const mime = blob.type || 'application/octet-stream';
+  try{
+    const file = new File([blob], filename, {type:mime});
+    if(navigator.canShare && navigator.canShare({files:[file]}) && /Android|iPhone|iPad/i.test(navigator.userAgent)){
+      await navigator.share({files:[file], title:filename});
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();}, 4000);
+  toast('Archivo descargado: '+filename, 3000);
+}
+
+/* ====================================================================
+   BASE DE DATOS LOCAL (IndexedDB)
+   ==================================================================== */
+const DB = (()=>{
+  let db;
+  function open(){ return new Promise((res,rej)=>{ const r=indexedDB.open('encuestas_ssr',1); r.onupgradeneeded=()=>{ r.result.createObjectStore('rec',{keyPath:'uid'}); }; r.onsuccess=()=>{db=r.result;res();}; r.onerror=()=>rej(r.error); }); }
+  function tx(mode){ return db.transaction('rec',mode).objectStore('rec'); }
+  const p = req => new Promise((res,rej)=>{ req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); });
+  return { open, all:()=>p(tx('readonly').getAll()), put:r=>p(tx('readwrite').put(r)), del:k=>p(tx('readwrite').delete(k)), clear:()=>p(tx('readwrite').clear()) };
+})();
+let RECS = [];
+async function reload(){ RECS = (await DB.all()).sort((a,b)=>(a.n||0)-(b.n||0)); refreshLists(); }
+
+/* ====================================================================
+   FORMULARIO
+   ==================================================================== */
+let cur = null;      // registro en edición
+let curIsNew = true;
+const TXT_FIELDS = ['n','nombre','rut','fono','ocupacion','ingreso','habitantes','hombres','mujeres','sector','camino','comunidad','arranque','obs','cabanas','lat','lon'];
+
+function blank(){
+  const maxN = RECS.reduce((m,r)=>Math.max(m, r.n||0), 0);
+  const lastSector = RECS.length ? (RECS.slice().sort((a,b)=>b.creado-a.creado)[0].sector||'') : '';
+  return { uid:uid(), n:maxN+1, tipo:'VIVIENDA', nombre:'', rut:'', fono:'', ocupacion:'', ingreso:'', ingresoNC:'', habitantes:'', hombres:'', mujeres:'',
+    sector:lastSector, ubic:null, camino:'', indigena:'NO', comunidad:'', tenencia:null, calidad:null, material:null, agua:null, sanitario:null, bano:null,
+    energia:null, enfermedad:null, acepta:null, categoria:'AUTO', arranque:'', obs:'', obsTags:[], cabanas:'', lat:null, lon:null, acc:null, gpsN:0, gpsTs:null,
+    firma:null, fotoTab:null, fotoEdi:null, tabEnEdif:false, encuestador:CFG.encuestador, creado:Date.now(), modificado:Date.now() };
+}
+
+function renderChips(){
+  document.querySelectorAll('.chips[data-k]').forEach(box=>{
+    const k=box.dataset.k;
+    box.innerHTML = OPC[k].map(([v,l])=>`<button type="button" class="chip" data-v="${esc(v)}">${esc(l)}</button>`).join('');
+    box.onclick = e=>{
+      const b=e.target.closest('.chip'); if(!b) return;
+      let v=b.dataset.v; if(/^\d+$/.test(v) && k!=='ingresoNC') v=Number(v);
+      cur[k] = (String(cur[k])===String(v) && k!=='categoria' && k!=='tipo') ? null : v;
+      syncChips(); onFormChange();
+    };
+  });
+}
+const CAB_TAG='CABAÑAS ASOCIADAS';
+function obsOptions(){ return String(CFG.obsList||'').split('\n').map(x=>x.trim().toUpperCase()).filter(Boolean); }
+function renderObsTags(){
+  const box=$('obsTags'); const tags=cur&&cur.obsTags||[];
+  const opts=[...new Set([...obsOptions(), ...tags])];
+  box.innerHTML=opts.map(t=>`<button type="button" class="chip${tags.includes(t)?' on':''}" data-v="${esc(t)}">${esc(t.charAt(0)+t.slice(1).toLowerCase())}</button>`).join('');
+  $('cabBox').classList.toggle('hide', !tags.some(t=>/CABA/.test(t)));
+}
+$('obsTags').onclick=e=>{ const b=e.target.closest('.chip'); if(!b) return; const t=b.dataset.v; cur.obsTags=cur.obsTags||[];
+  cur.obsTags = cur.obsTags.includes(t) ? cur.obsTags.filter(x=>x!==t) : [...cur.obsTags,t]; renderObsTags(); };
+// Texto combinado de observaciones para Excel, KMZ, Word y fichas
+function obsText(r){
+  const tags=(r.obsTags||[]).map(t=>/CABA/.test(t)&&num(r.cabanas)?`${t} (${num(r.cabanas)})`:t);
+  return [tags.join('; '), (r.obs||'').trim()].filter(Boolean).join('. ');
+}
+function syncChips(){
+  document.querySelectorAll('.chips[data-k]').forEach(box=>{
+    const k=box.dataset.k;
+    box.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', cur[k]!=null && String(cur[k])===c.dataset.v));
+  });
+}
+function fillForm(){
+  for(const k of TXT_FIELDS){ const el=$('f_'+k); if(el) el.value = cur[k]==null?'':cur[k]; }
+  $('f_tabEnEdif').checked = !!cur.tabEnEdif;
+  syncChips(); renderObsTags(); drawSigFromData(); renderPhotos(); onFormChange();
+  $('editInfo').textContent = curIsNew ? 'Encuesta nueva' : `Editando vivienda N° ${cur.n} · creada ${fmtDate(cur.creado)}`;
+  showGpsSaved();
+}
+function readForm(){
+  for(const k of TXT_FIELDS){ const el=$('f_'+k); if(!el) continue; let v=el.value.trim();
+    if(['n','habitantes','hombres','mujeres','ingreso','arranque','cabanas','lat','lon'].includes(k)) v = v===''?null:num(v);
+    else if(k!=='obs') v=v.toUpperCase();
+    cur[k]=v; }
+  cur.tabEnEdif = $('f_tabEnEdif').checked;
+}
+function onFormChange(){
+  readForm();
+  const sm = cur.tipo==='SM';
+  $('secOcup').classList.toggle('hide', sm);
+  $('f_comunidad').classList.toggle('hide', cur.indigena!=='SI');
+  // duplicados
+  const dup = RECS.find(r=>r.uid!==cur.uid && r.n===cur.n);
+  $('dupWarn').classList.toggle('hide', !dup);
+  if(dup) $('dupWarn').textContent = `Ya existe la vivienda N° ${cur.n} (${dup.nombre||dup.tipo}).`;
+  // RUT
+  const rw=$('rutWarn'); const showRut = cur.rut && !rutValid(cur.rut);
+  rw.classList.toggle('hide', !showRut); if(showRut) rw.textContent='El dígito verificador del RUT no coincide. Revise.';
+  const rdup = cur.rut && RECS.find(r=>r.uid!==cur.uid && rutClean(r.rut)===rutClean(cur.rut));
+  if(rdup && !showRut){ rw.classList.remove('hide'); rw.textContent=`Este RUT ya está en la vivienda N° ${rdup.n}.`; }
+  // habitantes
+  const h=num(cur.hombres), m=num(cur.mujeres), t=num(cur.habitantes);
+  const hw=$('habWarn'), badH = h!=null && m!=null && t!=null && h+m!==t;
+  hw.classList.toggle('hide', !badH); if(badH) hw.textContent=`Hombres + mujeres = ${h+m}, pero habitantes = ${t}.`;
+  // ingreso
+  const code=ingresoCode(cur); $('ingCode').textContent = code ? `Código ingreso (${code}): ${ingresoRangos()[code-1][1]}` : '';
+  $('catAuto').textContent = 'Quedará como: ' + CAT_SHORT[catOf(cur)];
+  $('declTxt').innerHTML = declHTML(cur);
+}
+function declHTML(r){
+  const b = s => `<b>${esc(s||'________')}</b>`;
+  return `Por el presente instrumento, Yo ${b(r.nombre)}, R.U.T.: ${b(r.rut)}, domiciliado en la localidad de ${b(r.sector)}, Comuna de ${b(CFG.comuna)}, bajo juramento declaro:<br>
+  Que estoy en conocimiento del Proyecto de ${b(CFG.ssr||'Agua Potable Rural')}, Comuna de ${b(CFG.comuna)}, en que es la ${b(CFG.ut)} la institución responsable de ejecución de este proyecto.<br>
+  Declaro, además, la aceptación del Servicio de Agua Potable y la disposición a pagar la tarifa que resulten de entregar el servicio de agua potable correspondiente al consumo de mi vivienda. También, en caso de ser necesario, autorizo los trabajos en mi terreno que tengan relación con la instalación del servicio.`
+  + (num(r.arranque) ? `<br><br><b>Aceptación arranque lejano:</b> Declaro que estoy en conocimiento e informado que el medidor quedará alejado <b>${num(r.arranque)}</b> metros aproximadamente de mi vivienda, y que entiendo que los costos asociados a la instalación de agua potable hacia mi vivienda serán mi responsabilidad.` : '');
+}
+
+function validate(r){
+  const errs=[], warns=[];
+  if(r.n==null) errs.push('Falta el N° de vivienda.');
+  if(RECS.find(x=>x.uid!==r.uid && x.n===r.n)) errs.push(`El N° ${r.n} ya existe.`);
+  if(r.lat==null||r.lon==null) warns.push('sin coordenadas GPS');
+  if(!r.fotoEdi && !r.fotoTab) warns.push('sin foto');
+  if(r.tipo!=='SM'){
+    if(!r.nombre) warns.push('sin nombre');
+    if(r.rut && !rutValid(r.rut)) warns.push('RUT con dígito verificador incorrecto');
+    if(r.acepta==='SI' && !r.firma) warns.push('acepta pero no firmó');
+    if(!r.acepta) warns.push('no indica si acepta el sistema');
+  }
+  return {errs,warns};
+}
+
+async function saveCur(){
+  readForm();
+  if(cur.rut) cur.rut = rutFormat(cur.rut);
+  const {errs,warns} = validate(cur);
+  if(errs.length){ alert(errs.join('\n')); return; }
+  if(warns.length && !confirm('Atención: '+warns.join(', ')+'.\n\n¿Guardar de todas formas?')) return;
+  cur.modificado = Date.now(); if(!cur.encuestador) cur.encuestador=CFG.encuestador;
+  await DB.put(JSON.parse(JSON.stringify(cur)));
+  await reload();
+  toast(`Vivienda N° ${cur.n} guardada ✓`);
+  newForm();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function newForm(){ cur=blank(); curIsNew=true; fillForm(); }
+function editRec(u){ const r=RECS.find(x=>x.uid===u); if(!r) return; cur=JSON.parse(JSON.stringify(r)); curIsNew=false; fillForm(); showTab('t-form'); window.scrollTo(0,0); }
+
+/* ====================================================================
+   GPS (funciona sin señal celular)
+   ==================================================================== */
+let lastFix=null, watchId=null, sampling=null;
+function startGPS(){
+  if(!('geolocation' in navigator)){ $('gpsLive').textContent='Este navegador no tiene GPS.'; return; }
+  if(watchId!=null) return;
+  watchId = navigator.geolocation.watchPosition(p=>{
+    lastFix = {lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy, ts:p.timestamp};
+    updGpsUI();
+    if(sampling && !sampling.stop) sampling.push(lastFix);
+    if(curTab==='t-map') drawMap();
+  }, err=>{
+    const b=$('gpsBadge'); b.className='bad'; b.textContent='GPS ✕';
+    $('gpsLive').textContent = err.code===1 ? 'Permiso de ubicación denegado. Actívelo en los ajustes del navegador para este sitio.' : 'Sin fix GPS aún ('+err.message+'). Salga al exterior.';
+  }, {enableHighAccuracy:true, maximumAge:0, timeout:60000});
+}
+function updGpsUI(){
+  const b=$('gpsBadge'); if(!lastFix) return;
+  const a=lastFix.acc; b.className = a<=CFG.acc ? 'ok' : a<=15 ? 'warn' : 'bad';
+  b.textContent = `GPS ±${a.toFixed(0)} m`;
+  $('gpsLive').innerHTML = `Ahora: ${lastFix.lat.toFixed(6)}, ${lastFix.lon.toFixed(6)} · <b>±${a.toFixed(1)} m</b>` + (a>CFG.acc?` <span class="mut">(esperando ≤ ${CFG.acc} m)</span>`:'');
+}
+async function captureGPS(){
+  if(!lastFix){ toast('Aún no hay señal GPS. Espere al aire libre.'); startGPS(); return; }
+  const btn=$('bGps');
+  if(sampling){ sampling.stop=true; return; }   // segundo toque = usar lo medido hasta ahora
+  sampling=[]; const S=sampling, seen=new Set();
+  const add=f=>{ const k=f.ts+'|'+f.lat+'|'+f.lon; if(!seen.has(k)){ seen.add(k); S.push(f); } };
+  add(lastFix);
+  const t0=Date.now(), need=Math.max(1,CFG.nread|0);
+  await new Promise(res=>{
+    const iv=setInterval(()=>{
+      // además del seguimiento continuo, pedimos una lectura fresca cada segundo
+      navigator.geolocation.getCurrentPosition(p=>add({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,ts:p.timestamp}),()=>{},{enableHighAccuracy:true,maximumAge:0,timeout:4000});
+      const good = S.filter(f=>f.acc<=CFG.acc);
+      btn.textContent = `Midiendo… ${good.length}/${need} lecturas buenas (${Math.round((Date.now()-t0)/1000)} s) · tocar para usar ya`;
+      if(good.length>=need || Date.now()-t0>30000 || S.stop){ clearInterval(iv); res(); }
+    }, 1000);
+  });
+  sampling = S;
+  let pool = sampling.filter(f=>f.acc<=CFG.acc); if(pool.length<3) pool = sampling.length?sampling:[lastFix];
+  pool = pool.sort((a,b)=>a.acc-b.acc).slice(0, Math.max(3, need));
+  let sw=0, la=0, lo=0; pool.forEach(f=>{ const w=1/(f.acc*f.acc); sw+=w; la+=f.lat*w; lo+=f.lon*w; });
+  sampling=null;
+  cur.lat=+(la/sw).toFixed(7); cur.lon=+(lo/sw).toFixed(7); cur.acc=+Math.min(...pool.map(f=>f.acc)).toFixed(1); cur.gpsN=pool.length; cur.gpsTs=Date.now();
+  $('f_lat').value=cur.lat; $('f_lon').value=cur.lon;
+  btn.textContent='📍 Capturar ubicación';
+  showGpsSaved(); toast(`Ubicación fijada ±${cur.acc} m`);
+}
+function showGpsSaved(){
+  const el=$('gpsSaved');
+  if(cur.lat!=null && cur.lon!=null){ const u=toUTM(cur.lat,cur.lon);
+    el.innerHTML = `<span style="color:var(--ok)">✓ Guardada:</span> ${cur.lat}, ${cur.lon}` + (cur.acc?` · ±${cur.acc} m (${cur.gpsN} lect.)`:' · manual') + `<br>UTM ${u.zone}: E ${u.E.toFixed(1)} · N ${u.N.toFixed(1)}`;
+  } else el.innerHTML='<span style="color:var(--warn)">Sin ubicación guardada para esta vivienda.</span>';
+}
+
+/* ====================================================================
+   FOTOS (redimensiona y estampa fecha / coordenadas / N° vivienda)
+   ==================================================================== */
+let photoSlot=null;
+function renderPhotos(){
+  const slot=(id,key,label)=>{
+    const el=$(id), d=cur[key], off = key==='fotoTab' && cur.tabEnEdif;
+    el.classList.toggle('off', off);
+    el.innerHTML = d ? `<img src="${d.src}"><button class="x" data-k="${key}">×</button><span>${label}</span>` : `<div style="font-size:28px">📷</div><div>${label}</div><div class="mut">${off?'(no necesaria)':'tocar para tomar'}</div>`;
+    el.onclick = e=>{ if(e.target.classList.contains('x')){ if(confirm('¿Quitar foto?')){ cur[key]=null; renderPhotos(); } return; } if(d) return; photoSlot=key; $('fileIn').value=''; $('fileIn').click(); };
+  };
+  slot('ph_tab','fotoTab','Tablilla'); slot('ph_edi','fotoEdi','Edificación');
+}
+async function processPhoto(file){
+  const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=URL.createObjectURL(file); });
+  const MAX=1600; let w=img.naturalWidth, h=img.naturalHeight; const s=Math.min(1, MAX/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s);
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.drawImage(img,0,0,w,h); URL.revokeObjectURL(img.src);
+  const fix = (cur.lat!=null)? {lat:cur.lat,lon:cur.lon} : lastFix;
+  const lines=[ fmtDate(Date.now()), fix?`${fix.lat.toFixed(6)}, ${fix.lon.toFixed(6)}`:'sin GPS', `Vivienda N° ${cur.n??'?'}${cur.sector?' · '+cur.sector:''}`, CFG.ssr||'' ].filter(Boolean);
+  const fs=Math.max(14, Math.round(Math.min(w,h)*0.032)); g.font=`600 ${fs}px sans-serif`; g.textBaseline='bottom';
+  lines.forEach((t,i)=>{ const y=h-fs*0.6-(lines.length-1-i)*fs*1.25; g.lineWidth=Math.max(3,fs/5); g.strokeStyle='rgba(0,0,0,.75)'; g.strokeText(t,fs*0.6,y); g.fillStyle='#fff'; g.fillText(t,fs*0.6,y); });
+  return {src:c.toDataURL('image/jpeg',0.82), w, h, ts:Date.now()};
+}
+
+/* ====================================================================
+   FIRMA
+   ==================================================================== */
+const sig=$('sig'); let sigCtx, sigDirty=false;
+function sigSetup(){
+  const r=sig.getBoundingClientRect(); if(!r.width) return;
+  const dpr=window.devicePixelRatio||1; sig.width=r.width*dpr; sig.height=r.height*dpr;
+  sigCtx=sig.getContext('2d'); sigCtx.scale(dpr,dpr); sigCtx.lineWidth=2.2; sigCtx.lineCap='round'; sigCtx.lineJoin='round'; sigCtx.strokeStyle='#0a2a6b';
+  drawSigFromData();
+}
+function drawSigFromData(){
+  if(!sigCtx) return; const r=sig.getBoundingClientRect(); sigCtx.clearRect(0,0,r.width,r.height);
+  if(cur && cur.firma){ const i=new Image(); i.onload=()=>{ const s=Math.min(r.width/i.width, r.height/i.height); sigCtx.drawImage(i,(r.width-i.width*s)/2,(r.height-i.height*s)/2,i.width*s,i.height*s); }; i.src=cur.firma; }
+}
+(function(){
+  let drawing=false, last=null;
+  const pt=e=>{ const r=sig.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
+  sig.addEventListener('pointerdown',e=>{ if(!sigCtx) sigSetup(); drawing=true; last=pt(e); sig.setPointerCapture(e.pointerId); sigDirty=true; });
+  sig.addEventListener('pointermove',e=>{ if(!drawing) return; const p=pt(e); sigCtx.beginPath(); sigCtx.moveTo(last.x,last.y); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); last=p; });
+  const end=()=>{ if(!drawing) return; drawing=false; cur.firma = trimSig(); };
+  sig.addEventListener('pointerup',end); sig.addEventListener('pointercancel',end);
+})();
+function trimSig(){
+  const w=sig.width,h=sig.height,d=sigCtx.getImageData(0,0,w,h).data; let x0=w,y0=h,x1=0,y1=0;
+  for(let y=0;y<h;y+=2) for(let x=0;x<w;x+=2){ if(d[(y*w+x)*4+3]>0){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; } }
+  if(x1<=x0) return null; const p=6; x0=Math.max(0,x0-p); y0=Math.max(0,y0-p); x1=Math.min(w,x1+p); y1=Math.min(h,y1+p);
+  const c=document.createElement('canvas'); c.width=x1-x0; c.height=y1-y0; const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(sig,x0,y0,c.width,c.height,0,0,c.width,c.height);
+  return c.toDataURL('image/png');
+}
+
+/* ====================================================================
+   LISTADO
+   ==================================================================== */
+function refreshLists(){
+  const q=($('q').value||'').toUpperCase().trim();
+  const items = RECS.filter(r=>!q || String(r.n)===q || (r.nombre||'').includes(q) || rutClean(r.rut).includes(rutClean(q)||'#') || (r.sector||'').includes(q) || obsText(r).toUpperCase().includes(q));
+  $('list').innerHTML = items.length ? items.map(r=>{
+    const c=catOf(r), tg=(ok,t)=>`<span class="tag ${ok?'ok':'no'}">${t}</span>`;
+    return `<div class="it" data-u="${r.uid}"><div class="n">${r.n}</div><div class="main"><div class="nm">${esc(r.tipo==='SM'?'SIN MORADORES':(r.nombre||'(sin nombre)'))}</div>
+      <div class="mut"><i class="dot" style="background:${CAT_COLOR[c]}"></i>${CAT_SHORT[c]} · ${esc(r.sector||'')} ${r.tipo!=='VIVIENDA'&&r.tipo!=='SM'?'· '+r.tipo:''}</div>
+      <div class="tags">${tg(r.lat!=null,'GPS')}${tg(r.fotoEdi||r.fotoTab,'Foto')}${r.tipo==='SM'?'':tg(r.firma,'Firma')}${obsText(r)?'<span class="tag" title="'+esc(obsText(r))+'">📝 Obs</span>':''}</div></div></div>`;
+  }).join('') : '<p class="mut" style="text-align:center;padding:20px">Sin encuestas.</p>';
+  const cnt=k=>RECS.filter(r=>catOf(r)===k).length;
+  const pob=RECS.filter(r=>catOf(r)==='BEN'&&r.tipo==='VIVIENDA').reduce((s,r)=>s+(num(r.habitantes)||0),0);
+  $('stats').innerHTML = `<div><b>${RECS.length}</b><span>Edificaciones</span></div><div><b style="color:var(--ben)">${cnt('BEN')}</b><span>Beneficiarias</span></div><div><b>${pob}</b><span>Hab. beneficiarios</span></div>
+    <div><b style="color:var(--pos)">${cnt('POS')}</b><span>Postergadas</span></div><div><b style="color:var(--nob)">${cnt('NOB')}</b><span>No benef.</span></div><div><b>${RECS.filter(r=>r.lat==null).length}</b><span>Sin GPS</span></div>`;
+  const sect=[...new Set(RECS.map(r=>r.sector).filter(Boolean))], oc=[...new Set(RECS.map(r=>r.ocupacion).filter(Boolean))];
+  $('dlSector').innerHTML=sect.map(s=>`<option value="${esc(s)}">`).join(''); $('dlOcup').innerHTML=oc.map(s=>`<option value="${esc(s)}">`).join('');
+  const pend = RECS.filter(r=>r.modificado>(CFG.lastBackup||0)).length;
+  $('bkInfo').innerHTML = CFG.lastBackup ? `Último respaldo: ${fmtDate(CFG.lastBackup)}. ${pend? `<b style="color:var(--warn)">${pend} encuesta(s) sin respaldar.</b>`:'Todo respaldado.'}` : `<b style="color:var(--warn)">Aún no ha hecho un respaldo.</b> Recomendado al final de cada jornada.`;
+}
+$('list').onclick=e=>{ const it=e.target.closest('.it'); if(it) editRec(it.dataset.u); };
+$('q').oninput=refreshLists;
+
+/* ====================================================================
+   MAPA / CROQUIS OFFLINE
+   ==================================================================== */
+const MV={cx:null,cy:null,scale:null};  // centro (lat/lon) y px por metro
+function proj(lat,lon){ const R=6371000, k=Math.PI/180; return {x:(lon-MV.cx)*k*R*Math.cos(MV.cy*k), y:-(lat-MV.cy)*k*R}; }
+function fitMap(){
+  const pts=RECS.filter(r=>r.lat!=null).map(r=>[r.lat,r.lon]); if(lastFix) pts.push([lastFix.lat,lastFix.lon]);
+  if(!pts.length){ MV.cx=null; return; }
+  const la=pts.map(p=>p[0]), lo=pts.map(p=>p[1]);
+  MV.cy=(Math.min(...la)+Math.max(...la))/2; MV.cx=(Math.min(...lo)+Math.max(...lo))/2;
+  const c=$('mapc'), r=c.getBoundingClientRect(); const a=proj(Math.max(...la),Math.min(...lo)), b=proj(Math.min(...la),Math.max(...lo));
+  const wM=Math.max(40,b.x-a.x), hM=Math.max(40,b.y-a.y); MV.scale=Math.min((r.width-50)/wM,(r.height-50)/hM);
+}
+let mapHits=[];
+function drawMap(){
+  const c=$('mapc'), r=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1; if(!r.width) return;
+  c.width=r.width*dpr; c.height=r.height*dpr; const g=c.getContext('2d'); g.scale(dpr,dpr); g.clearRect(0,0,r.width,r.height);
+  if(MV.cx==null) fitMap();
+  if(MV.cx==null){ g.fillStyle='#66727d'; g.font='14px sans-serif'; g.fillText('Sin puntos georreferenciados todavía.',16,30); return; }
+  const tx=p=>({x:r.width/2+p.x*MV.scale, y:r.height/2+p.y*MV.scale});
+  // escala
+  const nice=[5,10,20,50,100,200,500,1000,2000,5000]; const m=nice.find(n=>n*MV.scale>60)||5000;
+  g.strokeStyle='#333'; g.lineWidth=2; g.beginPath(); g.moveTo(12,r.height-14); g.lineTo(12+m*MV.scale,r.height-14); g.stroke(); g.fillStyle='#333'; g.font='11px sans-serif'; g.fillText(m+' m',14,r.height-18);
+  g.fillText('N ↑',r.width-30,18);
+  mapHits=[];
+  g.font='bold 11px sans-serif';
+  RECS.filter(x=>x.lat!=null).forEach(x=>{
+    const p=tx(proj(x.lat,x.lon)); g.fillStyle=CAT_COLOR[catOf(x)]; g.beginPath(); g.arc(p.x,p.y,6,0,7); g.fill(); g.strokeStyle='#fff'; g.lineWidth=1.5; g.stroke();
+    g.fillStyle='#111'; g.fillText(String(x.n),p.x+8,p.y+4); mapHits.push({x:p.x,y:p.y,u:x.uid});
+  });
+  if(lastFix){ const p=tx(proj(lastFix.lat,lastFix.lon)); g.fillStyle='rgba(43,123,255,.15)'; g.beginPath(); g.arc(p.x,p.y,Math.max(8,lastFix.acc*MV.scale),0,7); g.fill(); g.fillStyle='#2b7bff'; g.beginPath(); g.arc(p.x,p.y,6,0,7); g.fill(); g.strokeStyle='#fff'; g.lineWidth=2; g.stroke(); }
+}
+(function(){
+  const c=$('mapc'); let drag=null, moved=false;
+  c.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY,cx:MV.cx,cy:MV.cy}; moved=false; c.setPointerCapture(e.pointerId); });
+  c.addEventListener('pointermove',e=>{ if(!drag||MV.cx==null) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>4) moved=true; const R=6371000,k=Math.PI/180;
+    MV.cx=drag.cx-dx/MV.scale/(k*R*Math.cos(MV.cy*k)); MV.cy=drag.cy+dy/MV.scale/(k*R); drawMap(); });
+  c.addEventListener('pointerup',e=>{ if(!moved){ const r=c.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top; const h=mapHits.find(p=>Math.hypot(p.x-x,p.y-y)<14); if(h) editRec(h.u); } drag=null; });
+  $('mZin').onclick=()=>{ if(MV.scale){MV.scale*=1.5; drawMap();} }; $('mZout').onclick=()=>{ if(MV.scale){MV.scale/=1.5; drawMap();} };
+  $('mFit').onclick=()=>{ MV.cx=null; drawMap(); }; $('mMe').onclick=()=>{ if(lastFix){ MV.cx=lastFix.lon; MV.cy=lastFix.lat; if(!MV.scale) MV.scale=2; drawMap(); } else toast('Sin posición GPS'); };
+})();
+
+/* ====================================================================
+   EXPORTAR EXCEL (.xlsx) — mismo orden de columnas que la base actual
+   ==================================================================== */
+function colL(i){ let s=''; i++; while(i>0){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
+const X=(cond)=>cond?'X':'';
+function xlsxColumns(){
+  const opt=(g,f,o,fn,w)=>({g,f,o,fn,w});
+  return [
+    opt('IDENTIFICACIÓN','N° VIVIENDA',null,r=>r.n,10),
+    opt('IDENTIFICACIÓN','NOMBRE',null,r=>r.nombre,38),
+    opt('IDENTIFICACIÓN','RUT',null,r=>r.rut,14),
+    opt('IDENTIFICACIÓN','TELÉFONO DE CONTACTO',null,r=>num(r.fono)??r.fono,14),
+    opt('IDENTIFICACIÓN','DIRECCIÓN O SECTOR',null,r=>r.sector,18),
+    ...['PROPIA','ARRIENDO','OTRO'].map((o,i)=>opt('DATOS VIVIENDA','TENENCIA',o,r=>X(r.tenencia===i+1),8)),
+    ...['SÓLIDA','MADERA','MIXTA'].map((o,i)=>opt('DATOS VIVIENDA','MATERIALIDAD (B) (R) (M)',o,r=>r.material===i+1?(r.calidad||'X'):'',8)),
+    ...['AGUA PREDIAL RURAL','NORIA','VERTIENTE','POZO','ALJIBE','OTRA'].map((o,i)=>opt('DATOS VIVIENDA','ABASTECIMIENTO DE AGUA ACTUAL',o,r=>X(r.agua===i+1),7)),
+    ...['ALCANTARILLADO','FOSA SÉPTICA','POZO NEGRO','OTRO'].map((o,i)=>opt('DATOS VIVIENDA','SERVICIO SANITARIO',o,r=>X(r.sanitario===i+1),8)),
+    ...['FUERA','DENTRO'].map((o,i)=>opt('DATOS VIVIENDA','UBICACIÓN BAÑO',o,r=>X(r.bano===i+1),7)),
+    ...['SI','NO'].map(o=>opt('DATOS VIVIENDA','ENERGÍA ELÉCTRICA',o,r=>X(r.energia===o),5)),
+    ...['SI','NO'].map(o=>opt('DATOS VIVIENDA','ENFERMEDAD ENTÉRICA',o,r=>X(r.enfermedad===o),5)),
+    opt('CONDICIÓN DE LOS OCUPANTES','ACTIVIDAD','OCUPACIÓN',r=>r.ocupacion,22),
+    opt('CONDICIÓN DE LOS OCUPANTES','INGRESOS','(1) (2) (3) (4) (5)',r=>r.tipo==='SM'?'':ingresoCode(r),10),
+    opt('CONDICIÓN DE LOS OCUPANTES','HABITANTES','N°',r=>num(r.habitantes),9),
+    opt('CONDICIÓN DE LOS OCUPANTES','HOMBRES','N°',r=>num(r.hombres),8),
+    opt('CONDICIÓN DE LOS OCUPANTES','MUJERES','N°',r=>num(r.mujeres),8),
+    ...['CAMINO VECINAL','RUTA VIALIDAD','CAMINO PRIVADO'].map((o,i)=>opt('CONDICIÓN DE LOS OCUPANTES','UBICACIÓN VIVIENDA',o,r=>X(r.ubic===i+1),9)),
+    opt('PERTENECE A ALGUNA COMUNIDAD INDÍGENA (NOMBRE DE LA COMUNIDAD)',null,null,r=>r.tipo==='SM'?'':(r.indigena==='SI'?(r.comunidad||'SI'):'NO'),16),
+    opt('TIPO',null,null,r=>r.tipo,11),
+    opt('ACEPTA EL SISTEMA',null,null,r=>r.tipo==='SM'?'':(r.acepta||''),10),
+    opt('DATOS ADICIONALES (APP)','INGRESO DECLARADO ($)',null,r=>r.ingresoNC?'NC':num(r.ingreso),13),
+    opt('DATOS ADICIONALES (APP)','NOMBRE CAMINO',null,r=>r.camino,16),
+    opt('DATOS ADICIONALES (APP)','CATEGORÍA KMZ',null,r=>CAT_SHORT[catOf(r)].toUpperCase(),16),
+    opt('DATOS ADICIONALES (APP)','ARRANQUE LEJANO (m)',null,r=>num(r.arranque),10),
+    opt('DATOS ADICIONALES (APP)','LATITUD',null,r=>r.lat,12),
+    opt('DATOS ADICIONALES (APP)','LONGITUD',null,r=>r.lon,12),
+    opt('DATOS ADICIONALES (APP)','UTM ESTE',null,r=>r.lat!=null?toUTM(r.lat,r.lon).E:null,12),
+    opt('DATOS ADICIONALES (APP)','UTM NORTE',null,r=>r.lat!=null?toUTM(r.lat,r.lon).N:null,13),
+    opt('DATOS ADICIONALES (APP)','HUSO',null,r=>r.lat!=null?toUTM(r.lat,r.lon).zone:'',7),
+    opt('DATOS ADICIONALES (APP)','PRECISIÓN GPS (m)',null,r=>r.acc,10),
+    opt('DATOS ADICIONALES (APP)','FECHA ENCUESTA',null,r=>fmtDate(r.creado),16),
+    opt('DATOS ADICIONALES (APP)','ENCUESTADOR',null,r=>r.encuestador,16),
+    opt('DATOS ADICIONALES (APP)','FIRMA',null,r=>r.tipo==='SM'?'':(r.firma?'SI':'NO'),7),
+    opt('DATOS ADICIONALES (APP)','N° FOTOS',null,r=>(r.fotoTab?1:0)+(r.fotoEdi?1:0),8),
+    opt('DATOS ADICIONALES (APP)','N° CABAÑAS / EDIF. ASOCIADAS',null,r=>num(r.cabanas),12),
+    opt('DATOS ADICIONALES (APP)','OBSERVACIONES',null,r=>obsText(r),50),
+  ];
+}
+// Sheet builder: cells = {ref:{v,s,f}}
+function sheetXML(cells, merges, widths, opts={}){
+  const rows={};
+  for(const ref in cells){ const m=ref.match(/^([A-Z]+)(\d+)$/); (rows[m[2]]=rows[m[2]]||[]).push([ref,m[1],cells[ref]]); }
+  const colIdx=s=>s.split('').reduce((a,c)=>a*26+c.charCodeAt(0)-64,0);
+  let x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
+  if(opts.freeze) x+=`<sheetViews><sheetView workbookViewId="0"><pane xSplit="${opts.freeze[0]}" ySplit="${opts.freeze[1]}" topLeftCell="${colL(opts.freeze[0])}${opts.freeze[1]+1}" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>`;
+  if(widths && widths.length) x+='<cols>'+widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols>';
+  x+='<sheetData>';
+  Object.keys(rows).map(Number).sort((a,b)=>a-b).forEach(rn=>{
+    const ht = opts.heights && opts.heights[rn] ? ` ht="${opts.heights[rn]}" customHeight="1"` : '';
+    x+=`<row r="${rn}"${ht}>`;
+    rows[rn].sort((a,b)=>colIdx(a[1])-colIdx(b[1])).forEach(([ref,,c])=>{
+      const s=c.s?` s="${c.s}"`:'';
+      if(c.f){ x+=`<c r="${ref}"${s}${typeof c.v==='string'?' t="str"':''}><f>${xesc(c.f)}</f>${c.v!=null&&c.v!==''?`<v>${xesc(c.v)}</v>`:''}</c>`; }
+      else if(c.v==null||c.v==='') x+= c.s?`<c r="${ref}"${s}/>`:'';
+      else if(typeof c.v==='number' && isFinite(c.v)) x+=`<c r="${ref}"${s}><v>${c.v}</v></c>`;
+      else x+=`<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${xesc(c.v)}</t></is></c>`;
+    });
+    x+='</row>';
+  });
+  x+='</sheetData>';
+  if(merges && merges.length) x+=`<mergeCells count="${merges.length}">`+merges.map(m=>`<mergeCell ref="${m}"/>`).join('')+'</mergeCells>';
+  x+='<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+(opts.drawing?'<drawing r:id="rIdD"/>':'')+'</worksheet>';
+  return x;
+}
+const XLSX_STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="1"><numFmt numFmtId="164" formatCode="0.0"/></numFmts>
+<fonts count="3"><font><sz val="10"/><name val="Arial"/></font><font><b/><sz val="10"/><name val="Arial"/></font><font><b/><sz val="12"/><name val="Arial"/></font></fonts>
+<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9E2F3"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/></patternFill></fill></fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="8">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+function buildXlsx(recs){
+  const cols=xlsxColumns(), cells={}, merges=[];
+  const set=(c,r,v,s)=>{ cells[colL(c)+r]={v,s}; };
+  // Título
+  set(1,1,CFG.proyecto.toUpperCase(),4); merges.push(`B1:${colL(29)}1`);
+  // Encabezados filas 2–5 (igual a la planilla actual)
+  for(let i=0;i<cols.length;i++) for(let r=2;r<=5;r++) set(i,r,'',cols[i].g==='DATOS ADICIONALES (APP)'?7:1);
+  let i=0;
+  while(i<cols.length){ let j=i; while(j+1<cols.length && cols[j+1].g===cols[i].g) j++;
+    const sty=cols[i].g==='DATOS ADICIONALES (APP)'?7:1;
+    if(cols[i].f==null){ set(i,2,cols[i].g,sty); merges.push(`${colL(i)}2:${colL(i)}5`); i++; continue; }
+    set(i,2,cols[i].g,sty); if(j>i) merges.push(`${colL(i)}2:${colL(j)}2`);
+    let a=i; while(a<=j){ let b=a; while(b+1<=j && cols[b+1].f===cols[a].f) b++;
+      set(a,3,cols[a].f,sty);
+      if(cols[a].o){ merges.push(b>a?`${colL(a)}3:${colL(b)}4`:`${colL(a)}3:${colL(a)}4`); for(let k=a;k<=b;k++) set(k,5,cols[k].o,sty); }
+      else merges.push(`${colL(a)}3:${colL(a)}5`);
+      a=b+1; }
+    i=j+1; }
+  const R0=6; recs.forEach((r,k)=>cols.forEach((c,ci)=>{ let v=c.fn(r); if(v===undefined) v=null; set(ci,R0+k,v, (ci===1||c.f==='OBSERVACIONES'||c.f==='ACTIVIDAD')?3:2); }));
+  const last=R0+recs.length-1, Lr=Math.max(last,R0);
+  const sheet1=sheetXML(cells,merges,cols.map(c=>c.w),{freeze:[2,5],heights:{1:62,5:42},drawing:true});
+
+  // Lista Beneficiarios
+  const ben=recs.filter(r=>catOf(r)==='BEN'), pos=recs.filter(r=>catOf(r)==='POS'), nob=recs.filter(r=>catOf(r)==='NOB');
+  const listSheet=(title,arr,withObs)=>{ const c={}, m=[]; const h=['N°','N° VIVIENDA','NOMBRE','RUT'].concat(withObs?['OBSERVACIÓN']:[]);
+    c.A1={v:title,s:4}; m.push(`A1:${colL(h.length-1)}1`); h.forEach((t,i)=>c[colL(i)+'3']={v:t,s:1});
+    arr.forEach((r,k)=>{ const row=4+k; c['A'+row]={v:k+1,s:2}; c['B'+row]={v:r.n,s:2}; c['C'+row]={v:r.tipo==='SM'&&!r.nombre?'':r.nombre,s:3}; c['D'+row]={v:r.rut,s:2};
+      if(withObs) c['E'+row]={v: obsText(r) || (r.tipo==='SM'?'SIN MORADORES':r.acepta==='NO'?'NO ACEPTA EL SISTEMA':r.tipo),s:3}; });
+    return sheetXML(c,m,withObs?[6,12,40,14,40]:[6,12,40,14],{});
+  };
+  const sheet2=listSheet('Listado de Beneficiarios',ben,false);
+  const sheet3=listSheet('Listado de Postergados',pos,true);
+  const sheet4=listSheet('Listado de No Beneficiarios',nob,true);
+
+  // RESUMEN con fórmulas (y valores precalculados)
+  const E=c=>`ENCUESTAS!$${c}$6:$${c}$${Lr}`;
+  const colOf=name=>{ const i=cols.findIndex(c=>(c.f||c.g)===name); return colL(i); };
+  const cTipo=colOf('TIPO'), cAcep=colOf('ACEPTA EL SISTEMA'), cIng=colOf('INGRESOS'), cHab=colOf('HABITANTES'), cH=colOf('HOMBRES'), cM=colOf('MUJERES'), cCat=colOf('CATEGORÍA KMZ'), cLat=colOf('LATITUD');
+  const isViv=r=>r.tipo==='VIVIENDA', aSI=r=>r.acepta==='SI'&&r.tipo!=='SM';
+  const sumB=f=>recs.filter(r=>aSI(r)&&isViv(r)).reduce((s,r)=>s+(num(r[f])||0),0);
+  const rs={}, rm=[]; let row=1;
+  rs.A1={v:'RESUMEN ENCUESTA — '+CFG.proyecto.toUpperCase(),s:4}; rm.push('A1:B1'); row=3;
+  const put=(label,f,v,s=2)=>{ rs['A'+row]={v:label,s:5}; rs['B'+row]={f,v,s}; row++; };
+  const hdr=t=>{ rs['A'+row]={v:t,s:1}; rs['B'+row]={v:'',s:1}; row++; };
+  hdr('EDIFICACIONES');
+  put('Edificaciones identificadas',`COUNTA(${E('A')})`,recs.length);
+  put('Viviendas',`COUNTIF(${E(cTipo)},"VIVIENDA")`,recs.filter(isViv).length);
+  put('Público',`COUNTIF(${E(cTipo)},"PUBLICO")`,recs.filter(r=>r.tipo==='PUBLICO').length);
+  put('Comercios',`COUNTIF(${E(cTipo)},"COMERCIO")`,recs.filter(r=>r.tipo==='COMERCIO').length);
+  put('Sin moradores',`COUNTIF(${E(cTipo)},"SM")`,recs.filter(r=>r.tipo==='SM').length);
+  put('Edificaciones que aceptan el sistema',`COUNTIF(${E(cAcep)},"SI")`,recs.filter(aSI).length);
+  const rVB=row; put('Viviendas que aceptan',`COUNTIFS(${E(cAcep)},"SI",${E(cTipo)},"VIVIENDA")`,recs.filter(r=>aSI(r)&&isViv(r)).length);
+  put('Edif. pública que acepta',`COUNTIFS(${E(cAcep)},"SI",${E(cTipo)},"PUBLICO")`,recs.filter(r=>aSI(r)&&r.tipo==='PUBLICO').length);
+  put('Rechazan el sistema',`COUNTIF(${E(cAcep)},"NO")`,recs.filter(r=>r.acepta==='NO'&&r.tipo!=='SM').length);
+  row++; hdr('CATEGORÍAS (KMZ)');
+  put('Beneficiarias',`COUNTIF(${E(cCat)},"BENEFICIARIA")`,ben.length);
+  put('Postergadas',`COUNTIF(${E(cCat)},"POSTERGADA")`,pos.length);
+  put('No beneficiarias',`COUNTIF(${E(cCat)},"NO BENEFICIARIA")`,nob.length);
+  row++; hdr('POBLACIÓN (viviendas que aceptan)');
+  const rP=row; put('Habitantes',`SUMIFS(${E(cHab)},${E(cAcep)},"SI",${E(cTipo)},"VIVIENDA")`,sumB('habitantes'));
+  put('Hombres',`SUMIFS(${E(cH)},${E(cAcep)},"SI",${E(cTipo)},"VIVIENDA")`,sumB('hombres'));
+  put('Mujeres',`SUMIFS(${E(cM)},${E(cAcep)},"SI",${E(cTipo)},"VIVIENDA")`,sumB('mujeres'));
+  const nVB=recs.filter(r=>aSI(r)&&isViv(r)).length;
+  put('Densidad (hab/viv)',`IFERROR(B${rP}/B${rVB},0)`, nVB? +(sumB('habitantes')/nVB).toFixed(4):0, 6);
+  row++; hdr('INGRESOS (viviendas)');
+  ingresoRangos().forEach(([k,l])=>put(`(${k}) ${l}`,`COUNTIFS(${E(cTipo)},"VIVIENDA",${E(cIng)},${k})`,recs.filter(r=>isViv(r)&&ingresoCode(r)===k).length));
+  const block=(title,start,labels,match)=>{ row++; hdr(title); labels.forEach((l,i)=>{ const c=colL(start+i); put(l,`COUNTIF(${E(c)},"<>")`,recs.filter(r=>match(r,i)).length); }); };
+  const ci=name=>cols.findIndex(c=>c.f===name);
+  block('ABASTECIMIENTO DE AGUA ACTUAL',ci('ABASTECIMIENTO DE AGUA ACTUAL'),['Agua predial rural','Noria','Vertiente','Pozo','Aljibe','Otra'],(r,i)=>r.agua===i+1);
+  block('SERVICIO SANITARIO',ci('SERVICIO SANITARIO'),['Alcantarillado','Fosa séptica','Pozo negro','Otro'],(r,i)=>r.sanitario===i+1);
+  block('MATERIALIDAD',ci('MATERIALIDAD (B) (R) (M)'),['Sólida','Madera','Mixta'],(r,i)=>r.material===i+1);
+  row++; hdr('CONTROL DE CALIDAD');
+  put('Edificaciones sin coordenadas',`COUNTBLANK(${E(cLat)})`,recs.filter(r=>r.lat==null).length);
+  const sheet5=sheetXML(rs,rm,[44,16,12],{heights:{1:62},drawing:true});
+
+  const sheets=[['ENCUESTAS',sheet1],['Lista Beneficiarios',sheet2],['Viviendas Postergadas',sheet3],['No Beneficiarias',sheet4],['RESUMEN',sheet5]];
+  const cy=685800, cx=Math.round(cy*LOGO.w/LOGO.h);
+  const drawing=col=>`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><xdr:oneCellAnchor><xdr:from><xdr:col>${col}</xdr:col><xdr:colOff>60000</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>40000</xdr:rowOff></xdr:from><xdr:ext cx="${cx}" cy="${cy}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="2" name="Logo"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor></xdr:wsDr>`;
+  const relsX=x=>`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${x}</Relationships>`;
+  const drawParts=[
+    {name:'xl/media/logo.png',data:dataURLtoU8(LOGO.src)},
+    {name:'xl/drawings/drawing1.xml',data:drawing(0)},
+    {name:'xl/drawings/drawing2.xml',data:drawing(2)},
+    {name:'xl/drawings/_rels/drawing1.xml.rels',data:relsX('<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.png"/>')},
+    {name:'xl/drawings/_rels/drawing2.xml.rels',data:relsX('<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.png"/>')},
+    {name:'xl/worksheets/_rels/sheet1.xml.rels',data:relsX('<Relationship Id="rIdD" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>')},
+    {name:'xl/worksheets/_rels/sheet5.xml.rels',data:relsX('<Relationship Id="rIdD" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing2.xml"/>')},
+  ];
+  const files=[
+    {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/><Override PartName="/xl/drawings/drawing2.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`},
+    {name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+    {name:'xl/workbook.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s,i)=>`<sheet name="${xesc(s[0])}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml',data:XLSX_STYLES},
+    ...sheets.map((s,i)=>({name:`xl/worksheets/sheet${i+1}.xml`,data:s[1]})),
+    ...drawParts,
+  ];
+  const b=makeZip(files); return new Blob([b],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+
+/* ====================================================================
+   EXPORTAR KMZ — 3 carpetas como el KMZ actual, con fotos incrustadas
+   ==================================================================== */
+function buildKmz(recs){
+  const files=[]; const icon='http://maps.google.com/mapfiles/kml/shapes/homegardenbusiness.png';
+  const colorKml={BEN:'ff4cb41f',POS:'ff00a5ff',NOB:'ff2b39c0'};
+  const styles=Object.keys(colorKml).map(k=>`<Style id="s_${k}"><IconStyle><color>${colorKml[k]}</color><scale>1.1</scale><Icon><href>${icon}</href></Icon><hotSpot x="0.5" y="0" xunits="fraction" yunits="fraction"/></IconStyle><LabelStyle><scale>0.9</scale></LabelStyle></Style>`).join('');
+  const row=(k,v)=> v==null||v===''?'':`<tr><td style="color:#555;padding:1px 6px 1px 0"><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`;
+  const opt=(k,v)=>{ const o=OPC[k].find(x=>String(x[0])===String(v)); return o?o[1]:''; };
+  const folders={BEN:[],POS:[],NOB:[]};
+  recs.filter(r=>r.lat!=null&&r.lon!=null).forEach(r=>{
+    let imgs='';
+    [['fotoTab','tablilla'],['fotoEdi','edificacion']].forEach(([k,n])=>{ if(r[k]){ const fn=`files/viv_${r.n}_${n}.jpg`; files.push({name:fn,data:dataURLtoU8(r[k].src)}); imgs+=`<img src="${fn}" width="260"><br>`; } });
+    const u=toUTM(r.lat,r.lon);
+    const desc = `<table style="font-family:Arial;font-size:12px">${row('N° vivienda',r.n)}${row('Nombre',r.tipo==='SM'?'SIN MORADORES':r.nombre)}${row('RUT',r.rut)}${row('Teléfono',r.fono)}${row('Sector',r.sector)}${row('Tipo',r.tipo)}${row('Acepta sistema',r.acepta)}${row('Habitantes',r.habitantes)}${row('Abastecimiento',opt('agua',r.agua))}${row('Serv. sanitario',opt('sanitario',r.sanitario))}${row('UTM '+u.zone,`E ${u.E.toFixed(1)}  N ${u.N.toFixed(1)}`)}${row('Precisión GPS',r.acc!=null?'±'+r.acc+' m':'manual')}${row('Fecha',fmtDate(r.creado))}${row('Cabañas asociadas',num(r.cabanas))}${row('Observaciones',obsText(r))}</table>${imgs}`;
+    folders[catOf(r)].push(`<Placemark><name>${xesc(r.n)}</name><description><![CDATA[${desc.replace(/]]>/g,']]&gt;')}]]></description><styleUrl>#s_${catOf(r)}</styleUrl><Point><coordinates>${r.lon},${r.lat},0</coordinates></Point></Placemark>`);
+  });
+  files.push({name:'files/logo.png',data:dataURLtoU8(LOGO.src)});
+  const overlay=`<ScreenOverlay><name>${xesc(CFG.empresa||'Logo')}</name><Icon><href>files/logo.png</href></Icon><overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/><screenXY x="10" y="30" xunits="pixels" yunits="pixels"/><size x="0" y="110" xunits="pixels" yunits="pixels"/></ScreenOverlay>`;
+  const kml=`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${xesc(CFG.ssr||'Viviendas')} - edificaciones</name>${styles}${overlay}${Object.keys(folders).map(k=>`<Folder><name>${CAT_NAME[k]}</name>${folders[k].join('\n')}</Folder>`).join('\n')}</Document></kml>`;
+  return new Blob([makeZip([{name:'doc.kml',data:kml},...files])],{type:'application/vnd.google-earth.kmz'});
+}
+
+/* ====================================================================
+   EXPORTAR INFORME REGISTRO FOTOGRÁFICO (.docx)
+   ==================================================================== */
+function buildDocx(recs){
+  /* Informe de registro fotográfico: portada con logo, índice de edificaciones y
+     una ficha por edificación (2 por página) con N°, nombre, RUT, contacto, sector y coordenadas. */
+  const CM=360000, media=[];
+  const parts={doc:[],hdr:[]}; let rid=100, did=1;
+  const addImg=(src,w,h,boxW,boxH,part)=>{ // boxW/H en EMU; devuelve run con imagen ajustada a la caja
+    const id='rId'+(rid++), ext=src.startsWith('data:image/png')?'png':'jpeg', fn=`image${media.length+1}.${ext}`;
+    media.push({name:'word/media/'+fn,data:dataURLtoU8(src)});
+    parts[part].push(`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${fn}"/>`);
+    let cx=boxW, cy=Math.round(boxW*h/w); if(cy>boxH){ cy=boxH; cx=Math.round(boxH*w/h); }
+    const d=did++;
+    return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${d}" name="Imagen ${d}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${d}" name="${fn}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+  };
+  const AZ='0A1FC8', GRIS='F2F4F8', LINEA='9AA4B5';
+  const R=(t,o={})=>`<w:r><w:rPr>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sz?`<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>`:''}${o.caps?'<w:caps/>':''}</w:rPr><w:t xml:space="preserve">${xesc(t)}</w:t></w:r>`;
+  const P=(runs,o={})=>`<w:p><w:pPr>${o.style?`<w:pStyle w:val="${o.style}"/>`:''}${o.keep?'<w:keepNext/>':''}<w:spacing w:before="${o.b??0}" w:after="${o.a??0}"/>${o.jc?`<w:jc w:val="${o.jc}"/>`:''}${o.tabs||''}</w:pPr>${runs}</w:p>`;
+  const BR='<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  const brd=(c=LINEA,sz=6)=>`<w:top w:val="single" w:sz="${sz}" w:color="${c}"/><w:left w:val="single" w:sz="${sz}" w:color="${c}"/><w:bottom w:val="single" w:sz="${sz}" w:color="${c}"/><w:right w:val="single" w:sz="${sz}" w:color="${c}"/>`;
+  const TC=(content,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${o.w}" w:type="dxa"/>${o.span?`<w:gridSpan w:val="${o.span}"/>`:''}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:''}${o.v?`<w:vAlign w:val="${o.v}"/>`:''}<w:tcMar><w:top w:w="${o.pt??60}" w:type="dxa"/><w:bottom w:w="${o.pb??60}" w:type="dxa"/><w:left w:w="110" w:type="dxa"/><w:right w:w="110" w:type="dxa"/></w:tcMar></w:tcPr>${content}</w:tc>`;
+  const TBL=(grid,rows,o={})=>`<w:tbl><w:tblPr><w:tblW w:w="${grid.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>${o.borders??brd()}<w:insideH w:val="single" w:sz="4" w:color="${LINEA}"/><w:insideV w:val="single" w:sz="4" w:color="${LINEA}"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${grid.map(g=>`<w:gridCol w:w="${g}"/>`).join('')}</w:tblGrid>${rows}</w:tbl>`;
+  const TR=(cells,o={})=>`<w:tr><w:trPr><w:cantSplit/>${o.h?`<w:trHeight w:val="${o.h}" w:hRule="exact"/>`:''}${o.header?'<w:tblHeader/>':''}</w:trPr>${cells}</w:tr>`;
+  const W=9638; // ancho útil (17 cm)
+  const year=new Date().getFullYear();
+  const sorted=recs.slice().sort((a,b)=>(a.n||0)-(b.n||0));
+  const nombreOf=r=>r.tipo==='SM'?'SIN MORADORES':(r.nombre||(r.tipo!=='VIVIENDA'?r.tipo:'—'));
+  const fono=f=>{ const d=String(f||'').replace(/\D/g,''); if(!d) return '—'; if(d.length===9&&d[0]==='9') return `+56 9 ${d.slice(1,5)} ${d.slice(5)}`; return f; };
+  const condOf=r=>{ const c=catOf(r); return (r.tipo!=='VIVIENDA'&&r.tipo!=='SM'?r.tipo+' · ':'')+CAT_SHORT[c].toUpperCase(); };
+
+  let body='';
+  /* ---------- PORTADA ---------- */
+  body+=P(addImg(LOGO.src,LOGO.w,LOGO.h,4.2*CM,6.4*CM,'doc'),{jc:'center',b:600,a:300});
+  body+=P('',{a:1100});
+  body+=P(R(CFG.proyecto.toUpperCase(),{b:true,sz:30}),{jc:'center',a:600});
+  body+=P(R('REGISTRO FOTOGRÁFICO DE EDIFICACIONES',{b:true,c:AZ,sz:32}),{jc:'center',a:200});
+  body+=P(R(`${sorted.length} edificaciones encuestadas`,{sz:22,c:'555555'}),{jc:'center',a:1600});
+  const meses=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const loc=[CFG.comuna&&('COMUNA DE '+CFG.comuna), CFG.region&&('REGIÓN DE '+CFG.region)].filter(Boolean).join(' · ');
+  if(loc) body+=P(R(loc.toUpperCase(),{sz:20}),{jc:'center',a:60});
+  body+=P(R(`${meses[new Date().getMonth()]} ${year}`,{sz:20}),{jc:'center',a:0});
+  body+=BR;
+
+  /* ---------- ÍNDICE DE EDIFICACIONES ---------- */
+  body+=P(R('ÍNDICE DE EDIFICACIONES',{b:true,c:AZ,sz:26}),{a:160});
+  const cols=[700,3500,1500,1600,1300,1038];
+  const hcell=(t,w)=>TC(P(R(t,{b:true,c:'FFFFFF',sz:16}),{jc:'center'}),{w,fill:AZ,v:'center',pt:50,pb:50});
+  const cell=(t,w,jc)=>TC(P(R(t,{sz:16}),{jc}),{w,v:'center',pt:25,pb:25});
+  let rows=TR(['N°','NOMBRE','RUT','CONTACTO','SECTOR','FOTOS'].map((t,i)=>hcell(t,cols[i])).join(''),{header:true});
+  sorted.forEach((r,i)=>{ const nf=(r.fotoTab&&!r.tabEnEdif?1:0)+(r.fotoEdi?1:0)||(r.fotoTab?1:0);
+    rows+=`<w:tr><w:trPr><w:cantSplit/></w:trPr>${[ [String(r.n),'center'],[nombreOf(r),'left'],[r.rut||'—','center'],[fono(r.fono),'center'],[r.sector||'—','center'],[nf?String(nf):'SIN FOTO','center'] ]
+      .map(([t,jc],k)=>TC(P(R(t,{sz:16,c:t==='SIN FOTO'?'C0392B':undefined}),{jc}),{w:cols[k],v:'center',pt:25,pb:25,fill:i%2?GRIS:undefined})).join('')}</w:tr>`; });
+  body+=TBL(cols,rows);
+  body+=P(R('PROFESIONALES PARTICIPANTES',{b:true,c:AZ,sz:22}),{b:400,a:100});
+  if(CFG.profesional) body+=P(R(CFG.profesional.toUpperCase(),{sz:20}),{a:40});
+  if(CFG.encuestador && CFG.encuestador!==CFG.profesional) body+=P(R('ENCUESTADOR: '+CFG.encuestador.toUpperCase(),{sz:20}),{a:40});
+  body+=P(R('OBSERVACIONES',{b:true,c:AZ,sz:22}),{b:300,a:100});
+  body+=P(R('',{sz:20}),{a:0});
+  body+=BR;
+
+  /* ---------- FICHAS FOTOGRÁFICAS (2 por página) ---------- */
+  const half=W/2|0;
+  sorted.forEach((r,i)=>{
+    const ob=obsText(r), PH=(ob? (ob.length>110?6.5:6.9) : 7.4)*CM;  // con observaciones, la foto cede espacio para que sigan cabiendo 2 por página
+    const u=r.lat!=null?toUTM(r.lat,r.lon):null;
+    const head = TC(P(R(`EDIFICACIÓN N° ${r.n}`,{b:true,c:'FFFFFF',sz:24})+'<w:r><w:tab/></w:r>'+R(condOf(r),{b:true,c:'FFFFFF',sz:16}),
+                 {tabs:`<w:tabs><w:tab w:val="right" w:pos="${W-240}"/></w:tabs>`}),{w:W,span:2,fill:AZ,v:'center',pt:70,pb:70});
+    const two = r.fotoTab && r.fotoEdi && !r.tabEnEdif;
+    const lab=t=>P(R(t,{i:true,sz:15,c:'555555'}),{jc:'center',b:40});
+    let photoRow;
+    if(two){
+      const bw=half-300;
+      photoRow=TC(P(addImg(r.fotoTab.src,r.fotoTab.w,r.fotoTab.h,bw*635,PH,'doc'),{jc:'center'})+lab('Tablilla'),{w:half,v:'center'})
+              +TC(P(addImg(r.fotoEdi.src,r.fotoEdi.w,r.fotoEdi.h,bw*635,PH,'doc'),{jc:'center'})+lab('Edificación'),{w:W-half,v:'center'});
+    } else {
+      const ph=r.fotoEdi||r.fotoTab;
+      photoRow=TC(ph ? P(addImg(ph.src,ph.w,ph.h,(W-300)*635,PH,'doc'),{jc:'center'})+lab(r.fotoEdi?(r.tabEnEdif||!r.fotoTab?'Edificación y tablilla':'Edificación'):'Tablilla')
+                     : P(R('Sin registro fotográfico',{i:true,c:'C0392B',sz:18}),{jc:'center'}),{w:W,span:2,v:'center'});
+    }
+    const kv=(k,v)=>P(R(k+': ',{b:true,sz:17,c:'333333'})+R(v||'—',{sz:17}),{a:20});
+    const left = kv('Nombre',nombreOf(r))+kv('RUT',r.rut)+kv('Contacto',fono(r.fono));
+    const right= kv('Sector',r.sector)+kv('Coordenadas', r.lat!=null?`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`:'sin GPS')+kv(u?`UTM ${u.zone}`:'UTM', u?`E ${u.E.toFixed(0)} · N ${u.N.toFixed(0)}`:'—');
+    const ficha = TBL([half,W-half],
+      TR(head) + TR(photoRow,{h:Math.round((PH/635)+600)}) + TR(TC(left,{w:half,fill:GRIS,pt:80,pb:80})+TC(right,{w:W-half,fill:GRIS,pt:80,pb:80}))
+      + (obsText(r)? TR(TC(P(R('Observaciones: ',{b:true,sz:17,c:'333333'})+R(obsText(r),{sz:17})),{w:W,span:2,fill:'FFF8E1',pt:60,pb:60})) : ''),
+      {borders:brd(AZ,8)});
+    body+=ficha;
+    if(i%2===0 && i<sorted.length-1) body+=P('',{b:0,a:360}); else if(i<sorted.length-1) body+=BR;
+  });
+
+  /* ---------- ENCABEZADO / PIE ---------- */
+  const hdrLogo=addImg(LOGO.src,LOGO.w,LOGO.h,0.75*CM,1.15*CM,'hdr');
+  const header=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">`+
+    TBL([1000,W-1000], TR(TC(P(hdrLogo),{w:1000,v:'center',pt:0,pb:40})+TC(P(R((CFG.empresa||'').toUpperCase(),{b:true,c:AZ,sz:16}),{jc:'right'})+P(R(CFG.proyecto.toUpperCase(),{sz:13,c:'555555'}),{jc:'right'})+P(R('REGISTRO FOTOGRÁFICO DE EDIFICACIONES',{sz:13,c:'555555'}),{jc:'right'}),{w:W-1000,v:'center',pt:0,pb:40})),
+      {borders:`<w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="single" w:sz="8" w:color="${AZ}"/><w:right w:val="nil"/>`}).replace(/<w:insideH[^>]*\/><w:insideV[^>]*\/>/,'<w:insideH w:val="nil"/><w:insideV w:val="nil"/>')+
+    `<w:p><w:pPr><w:spacing w:after="0"/></w:pPr></w:p></w:hdr>`;
+  const fld=f=>`<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${f} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>`;
+  const footer=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="4" w:space="4" w:color="${LINEA}"/></w:pBdr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:sz w:val="16"/><w:color w:val="666666"/></w:rPr><w:t xml:space="preserve">Página </w:t></w:r>${fld('PAGE')}<w:r><w:rPr><w:sz w:val="16"/><w:color w:val="666666"/></w:rPr><w:t xml:space="preserve"> de </w:t></w:r>${fld('NUMPAGES')}</w:p></w:ftr>`;
+  const emptyHdr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p/></w:hdr>`;
+  const sect=`<w:sectPr><w:headerReference w:type="default" r:id="rIdH"/><w:headerReference w:type="first" r:id="rIdH0"/><w:footerReference w:type="default" r:id="rIdF"/><w:footerReference w:type="first" r:id="rIdF0"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1560" w:right="1134" w:bottom="1000" w:left="1468" w:header="454" w:footer="454" w:gutter="0"/><w:titlePg/></w:sectPr>`;
+  const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document ${NS}><w:body>${body}${sect}</w:body></w:document>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="es-CL"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style></w:styles>`;
+  const settings=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:defaultTabStop w:val="708"/><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`;
+  const RELS=x=>`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${x}</Relationships>`;
+  const T='http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
+  const WP='application/vnd.openxmlformats-officedocument.wordprocessingml.';
+  const files=[
+    {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="${WP}document.main+xml"/><Override PartName="/word/styles.xml" ContentType="${WP}styles+xml"/><Override PartName="/word/settings.xml" ContentType="${WP}settings+xml"/><Override PartName="/word/header1.xml" ContentType="${WP}header+xml"/><Override PartName="/word/header2.xml" ContentType="${WP}header+xml"/><Override PartName="/word/footer1.xml" ContentType="${WP}footer+xml"/><Override PartName="/word/footer2.xml" ContentType="${WP}footer+xml"/></Types>`},
+    {name:'_rels/.rels',data:RELS(`<Relationship Id="rId1" Type="${T}officeDocument" Target="word/document.xml"/>`)},
+    {name:'word/document.xml',data:doc},
+    {name:'word/styles.xml',data:styles},
+    {name:'word/settings.xml',data:settings},
+    {name:'word/header1.xml',data:header},
+    {name:'word/header2.xml',data:emptyHdr},
+    {name:'word/footer1.xml',data:footer},
+    {name:'word/footer2.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p/></w:ftr>`},
+    {name:'word/_rels/header1.xml.rels',data:RELS(parts.hdr.join(''))},
+    {name:'word/_rels/document.xml.rels',data:RELS(`<Relationship Id="rId1" Type="${T}styles" Target="styles.xml"/><Relationship Id="rId2" Type="${T}settings" Target="settings.xml"/><Relationship Id="rIdH" Type="${T}header" Target="header1.xml"/><Relationship Id="rIdH0" Type="${T}header" Target="header2.xml"/><Relationship Id="rIdF" Type="${T}footer" Target="footer1.xml"/><Relationship Id="rIdF0" Type="${T}footer" Target="footer2.xml"/>${parts.doc.join('')}`)},
+    ...media,
+  ];
+  return new Blob([makeZip(files)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+
+/* ====================================================================
+   FICHAS IMPRIMIBLES (equivalente a la encuesta en papel)
+   ==================================================================== */
+function fichaHTML(r){
+  const o=(k,v)=>{ const x=OPC[k].find(a=>String(a[0])===String(v)); return x?x[1].toUpperCase():'—'; };
+  const u=r.lat!=null?toUTM(r.lat,r.lon):null;
+  const td=(a,b)=>`<td><b>${a}</b></td><td>${esc(b==null||b===''?'—':b)}</td>`;
+  return `<div class="ficha"><div style="display:flex;align-items:center;gap:12px;border-bottom:2px solid #0a1fc8;padding-bottom:6px;margin-bottom:8px"><img src="${LOGO.src}" style="height:62px"><div style="flex:1"><div style="font-weight:700;color:#0a1fc8;font-size:10pt">${esc((CFG.empresa||'').toUpperCase())}</div><div style="font-size:8.5pt">${esc(CFG.proyecto)}</div></div></div>
+  <h3>ENCUESTA SOCIOECONÓMICA HABITANTES — N° ${r.n}</h3>
+  <table><tr><td colspan="2" style="background:#eee"><b>DATOS OCUPANTES</b></td><td colspan="2" style="background:#eee"><b>DATOS VIVIENDA</b></td></tr>
+  <tr>${td('Nombre',r.tipo==='SM'?'SIN MORADORES':r.nombre)}${td('(1) Tenencia',o('tenencia',r.tenencia))}</tr>
+  <tr>${td('R.U.T.',r.rut)}${td('(2) Calidad',o('calidad',r.calidad))}</tr>
+  <tr>${td('N° celular',r.fono)}${td('(3) Material',o('material',r.material))}</tr>
+  <tr>${td('Ocupación',r.ocupacion)}${td('(4) Abastecimiento agua',o('agua',r.agua))}</tr>
+  <tr>${td('Ingresos ($/mes)',r.ingresoNC?'NO CONTESTA':r.ingreso)}${td('(5) Servicio sanitario',o('sanitario',r.sanitario))}</tr>
+  <tr>${td('Habitantes / H / M',`${r.habitantes??'—'} / ${r.hombres??'—'} / ${r.mujeres??'—'}`)}${td('(6) Ubicación baño',o('bano',r.bano))}</tr>
+  <tr>${td('Sector',r.sector)}${td('(7) Energía eléctrica',o('energia',r.energia))}</tr>
+  <tr>${td('Ubicación vivienda',o('ubic',r.ubic)+(r.camino?' — '+r.camino:''))}${td('(8) Enfermedad entérica',o('enfermedad',r.enfermedad))}</tr>
+  <tr>${td('Comunidad indígena',r.indigena==='SI'?(r.comunidad||'SÍ'):'NO')}${td('Tipo / Acepta',`${r.tipo} / ${r.acepta||'—'}`)}</tr>
+  <tr>${td('Coordenadas',r.lat!=null?`${r.lat}, ${r.lon}`:'—')}${td('UTM '+(u?u.zone:''),u?`E ${u.E.toFixed(1)} N ${u.N.toFixed(1)}`:'—')}</tr>
+  <tr>${td('Fecha',fmtDate(r.creado))}${td('Encuestador',r.encuestador)}</tr></table>
+  ${obsText(r)?`<p style="font-size:9.5pt"><b>Observaciones:</b> ${esc(obsText(r))}</p>`:''}
+  ${r.tipo==='SM'?'':`<h3 style="margin-top:12px">DECLARACIÓN JURADA</h3><div class="dj">${declHTML(r)}</div>
+  <div class="firma">${r.firma?`<img src="${r.firma}">`:'<div style="height:60px"></div>'}<div style="border-top:1px solid #000;width:60%;margin:0 auto;font-size:9pt">Firma</div></div>`}
+  </div>`;
+}
+function printFichas(recs){ $('print').innerHTML = recs.map(fichaHTML).join(''); setTimeout(()=>window.print(),300); }
+
+/* ====================================================================
+   RESPALDO / IMPORTACIÓN
+   ==================================================================== */
+async function exportJson(){
+  const data={app:'encuestas-ssr',version:1,exportado:Date.now(),config:CFG,records:RECS};
+  await deliver(new Blob([JSON.stringify(data)],{type:'application/json'}), `respaldo_encuestas_${slug(CFG.ssr)}_${CFG.encuestador?slug(CFG.encuestador)+'_':''}${fileStamp()}.json`);
+  CFG.lastBackup=Date.now(); saveCfg(); refreshLists();
+}
+async function importJson(file){
+  let data; try{ data=JSON.parse(await file.text()); }catch(e){ alert('Archivo no válido.'); return; }
+  if(!data||!Array.isArray(data.records)){ alert('El archivo no es un respaldo de esta app.'); return; }
+  let nuevos=0, act=0, conflictos=[];
+  for(const r of data.records){
+    const ex=RECS.find(x=>x.uid===r.uid);
+    if(ex){ if((r.modificado||0)>(ex.modificado||0)){ await DB.put(r); act++; } continue; }
+    const dupN=RECS.find(x=>x.n===r.n); if(dupN) conflictos.push(r.n);
+    await DB.put(r); nuevos++;
+  }
+  if(data.config && !RECS.length && confirm('¿Usar también la configuración del proyecto que viene en el respaldo?')){ const keep={devId:CFG.devId,encuestador:CFG.encuestador,lastBackup:CFG.lastBackup}; CFG=Object.assign({},DEF_CFG,data.config,keep); saveCfg(); fillCfg(); }
+  await reload();
+  alert(`Importación lista: ${nuevos} nuevas, ${act} actualizadas.` + (conflictos.length?`\n\nOjo: N° de vivienda repetidos (de otro encuestador): ${[...new Set(conflictos)].join(', ')}. Revíselos en el listado.`:''));
+}
+
+/* ====================================================================
+   CONFIGURACIÓN
+   ==================================================================== */
+const CFG_FIELDS=['proyecto','ssr','comuna','region','ut','encuestador','profesional','empresa','obsList','r1','r2','r3','acc','nread'];
+function fillCfg(){ CFG_FIELDS.forEach(k=>$('c_'+k).value=CFG[k]??''); $('hTitle').textContent=CFG.ssr?('SSR '+CFG.ssr):'Encuestas SSR'; }
+CFG_FIELDS.forEach(k=>$('c_'+k).addEventListener('change',e=>{ let v=e.target.value.trim(); if(['r1','r2','r3','acc','nread'].includes(k)) v=num(v)||DEF_CFG[k]; CFG[k]=v; saveCfg(); fillCfg(); if(k==='obsList') renderObsTags(); if(cur) onFormChange(); }));
+async function storInfo(){
+  let t=`${RECS.length} encuestas guardadas en este teléfono.`;
+  try{ if(navigator.storage&&navigator.storage.estimate){ const e=await navigator.storage.estimate(); t+=` Espacio usado: ${(e.usage/1048576).toFixed(1)} MB.`; }
+       if(navigator.storage&&navigator.storage.persisted){ const p=await navigator.storage.persisted(); t+= p?' Almacenamiento protegido ✓.':' Almacenamiento no protegido: haga respaldos seguido.'; } }catch(e){}
+  $('storInfo').textContent=t;
+}
+
+/* ====================================================================
+   NAVEGACIÓN Y EVENTOS
+   ==================================================================== */
+let curTab='t-form';
+function showTab(id){
+  curTab=id; document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id===id));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+  if(id==='t-map'){ MV.cx=null; setTimeout(drawMap,30); }
+  if(id==='t-cfg') storInfo();
+  if(id==='t-form') setTimeout(()=>{ if(!sigCtx) sigSetup(); },30);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+document.querySelectorAll('#t-form input, #t-form textarea').forEach(el=>{ if(el.type!=='file') el.addEventListener('input',onFormChange); });
+$('f_rut').addEventListener('blur',()=>{ if(rutClean($('f_rut').value).length>1){ $('f_rut').value=rutFormat($('f_rut').value); onFormChange(); }});
+$('f_tabEnEdif').addEventListener('change',()=>{ readForm(); renderPhotos(); });
+$('bGps').onclick=captureGPS;
+$('bSave').onclick=saveCur;
+$('bNew').onclick=()=>{ if(confirm('¿Descartar cambios no guardados y empezar una encuesta nueva?')) newForm(); };
+$('bSigClr').onclick=()=>{ cur.firma=null; drawSigFromData(); };
+$('fileIn').onchange=async e=>{ const f=e.target.files[0]; if(!f||!photoSlot) return; toast('Procesando foto…'); try{ cur[photoSlot]=await processPhoto(f); renderPhotos(); }catch(err){ alert('No se pudo leer la foto.'); } };
+const need=()=>{ if(!RECS.length){ toast('No hay encuestas guardadas'); return false; } return true; };
+$('xXlsx').onclick=async()=>{ if(!need()) return; await deliver(buildXlsx(RECS), `BASE_DE_DATOS_ENCUESTAS_${slug(CFG.ssr)}_${fileStamp()}.xlsx`); };
+$('xKmz').onclick=async()=>{ if(!need()) return; const sin=RECS.filter(r=>r.lat==null).length; if(sin) toast(`${sin} edificación(es) sin coordenadas quedan fuera del KMZ`,3500); await deliver(buildKmz(RECS), `Viviendas_${slug(CFG.ssr)}_${fileStamp()}.kmz`); };
+$('xDocx').onclick=async()=>{ if(!need()) return; toast('Armando informe…'); await deliver(buildDocx(RECS), `INFORME_REGISTRO_FOTOGRAFICO_${slug(CFG.ssr)}_${fileStamp()}.docx`); };
+$('xPrint').onclick=()=>{ if(need()) printFichas(RECS); };
+$('xJson').onclick=()=>{ if(need()) exportJson(); };
+$('xImp').onclick=()=>{ $('impIn').value=''; $('impIn').click(); };
+$('impIn').onchange=e=>{ if(e.target.files[0]) importJson(e.target.files[0]); };
+$('bWipe').onclick=async()=>{ if(!RECS.length) return; if(!confirm(`Se borrarán ${RECS.length} encuestas de este teléfono. ¿Ya hizo un respaldo?`)) return; if(prompt('Escriba BORRAR para confirmar')!=='BORRAR') return; await DB.clear(); await reload(); newForm(); storInfo(); toast('Encuestas borradas'); };
+window.addEventListener('resize',()=>{ sigSetup(); if(curTab==='t-map') drawMap(); });
+window.addEventListener('beforeunload',e=>{ if(cur && (cur.nombre||cur.firma||cur.fotoEdi) && curIsNew){ e.preventDefault(); e.returnValue=''; } });
+
+/* ====================================================================
+   ARRANQUE
+   ==================================================================== */
+(async function init(){
+  $('hLogo').src=LOGO_HDR;
+  renderChips(); fillCfg();
+  try{ await DB.open(); }catch(e){ alert('No se pudo abrir el almacenamiento local del navegador.'); }
+  await reload(); newForm(); sigSetup(); startGPS();
+  try{ if(navigator.storage&&navigator.storage.persist) await navigator.storage.persist(); }catch(e){}
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(!CFG.ssr) { showTab('t-cfg'); toast('Primero configure el proyecto',3000); }
+})();
+</script>
+</body>
+</html>
