@@ -73,6 +73,20 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
 .hide{display:none!important}
 .sticky-save{position:sticky;bottom:64px;z-index:10;background:linear-gradient(transparent,var(--bg) 30%);padding-top:14px}
 #print{display:none}
+.ck{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-top:10px;line-height:1.35}
+.ck input{width:22px;height:22px;flex:0 0 22px;margin-top:1px}
+#lock{position:fixed;inset:0;z-index:80;background:var(--pri);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#lock .dots{display:flex;gap:14px;margin:18px 0 22px}#lock .dots i{width:16px;height:16px;border-radius:50%;border:2px solid #fff}#lock .dots i.on{background:#fff}
+#lock .pad{display:grid;grid-template-columns:repeat(3,76px);gap:14px}
+#lock .pad button{height:76px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:28px;font-weight:600}
+#lock .pad button.t{background:none;font-size:15px}
+#lock .msg{min-height:22px;font-size:14px;opacity:.9;text-align:center}
+#lock a{color:#fff;opacity:.85;font-size:14px;margin-top:18px;text-decoration:underline}
+.modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal>div{background:#fff;border-radius:14px;padding:16px;width:100%;max-width:420px}
+.modal h3{margin:0 0 8px;color:var(--pri);font-size:17px}
+.priv{font-size:14px;line-height:1.5}.priv h4{color:var(--pri);margin:14px 0 4px;font-size:14px}
+.retban{background:#fdecea;border:1px solid #f1b0a9;color:#8a2116;border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
 @media print{
   body *{visibility:hidden}
   #print,#print *{visibility:visible}
@@ -127,6 +141,17 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     </div>
     <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" id="f_tabEnEdif"> La tablilla se ve en la foto de la edificación (basta una foto)</label>
     <input type="file" id="fileIn" accept="image/*" capture="environment" class="hide">
+    <div class="mut" style="margin-top:6px">Evite que aparezcan personas, rostros o patentes en las fotos.</div>
+  </div>
+
+  <div class="card" id="secCons">
+    <h2>Información y consentimiento</h2>
+    <div class="decl" id="consTxt"></div>
+    <button class="btn sec w" id="bPriv" style="margin-top:8px">Ver política de privacidad completa</button>
+    <label class="ck"><input type="checkbox" id="f_consiente"><span>El encuestado fue informado y <b>acepta</b> que se registren sus datos para este estudio.</span></label>
+    <label class="ck"><input type="checkbox" id="f_consSens"><span>Acepta además responder las preguntas sobre <b>salud</b> (enfermedad entérica) y <b>pertenencia a pueblo indígena</b>. <i>Opcional.</i></span></label>
+    <div id="consInfo" class="mut" style="margin-top:6px"></div>
+    <div id="noConsBox" class="warnbox hide">Sin consentimiento solo se registran la ubicación, las fotos de la edificación y las observaciones. Los datos personales quedan ocultos y no se guardan.</div>
   </div>
 
   <div id="secOcup">
@@ -139,9 +164,9 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     </div>
     <div id="rutWarn" class="warnbox hide"></div>
     <label class="f">Ocupación / actividad</label><input type="text" id="f_ocupacion" list="dlOcup" autocapitalize="characters">
-    <label class="f">Ingresos ($/mes)</label>
-    <div class="row"><input type="number" id="f_ingreso" inputmode="numeric"><div class="chips" data-k="ingresoNC" style="flex:0 0 auto"></div></div>
-    <div class="mut" id="ingCode"></div>
+    <label class="f">Ingreso mensual del hogar (tramo)</label>
+    <div class="chips" data-k="ingresoTramo"></div>
+    <div class="mut">Solo se registra el tramo, no el monto.</div>
     <div class="row">
       <div><label class="f">Habitantes</label><input type="number" id="f_habitantes" inputmode="numeric"></div>
       <div><label class="f">N° hombres</label><input type="number" id="f_hombres" inputmode="numeric"></div>
@@ -151,8 +176,8 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     <label class="f">Sector</label><input type="text" id="f_sector" list="dlSector" autocapitalize="characters">
     <label class="f">Ubicación vivienda</label><div class="chips" data-k="ubic"></div>
     <label class="f">Nombre camino</label><input type="text" id="f_camino" autocapitalize="characters">
-    <label class="f">Pertenece a una comunidad indígena</label><div class="chips" data-k="indigena"></div>
-    <input type="text" id="f_comunidad" placeholder="Nombre de la comunidad" class="hide" style="margin-top:6px" autocapitalize="characters">
+    <div id="wrapInd"><label class="f">Pertenece a una comunidad indígena</label><div class="chips" data-k="indigena"></div>
+    <input type="text" id="f_comunidad" placeholder="Nombre de la comunidad" class="hide" style="margin-top:6px" autocapitalize="characters"></div>
   </div>
 
   <div class="card">
@@ -164,7 +189,7 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     <label class="f">(5) Servicio sanitario</label><div class="chips" data-k="sanitario"></div>
     <label class="f">(6) Ubicación baño</label><div class="chips" data-k="bano"></div>
     <label class="f">(7) Energía eléctrica</label><div class="chips" data-k="energia"></div>
-    <label class="f">(8) Enfermedad entérica</label><div class="chips" data-k="enfermedad"></div>
+    <div id="wrapEnf"><label class="f">(8) Enfermedad entérica</label><div class="chips" data-k="enfermedad"></div></div>
   </div>
 
   <div class="card">
@@ -206,6 +231,7 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
 
 <!-- ============ LISTADO ============ -->
 <section class="tab" id="t-list">
+  <div id="retBan1"></div>
   <div class="card">
     <div class="stat" id="stats"></div>
   </div>
@@ -234,6 +260,7 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
 
 <!-- ============ EXPORTAR ============ -->
 <section class="tab" id="t-exp">
+  <div id="retBan2"></div>
   <div class="card">
     <h2>Productos</h2>
     <div class="btns" style="flex-direction:column">
@@ -248,11 +275,12 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     <h2>Respaldo y trabajo en equipo</h2>
     <p class="mut" id="bkInfo"></p>
     <div class="btns">
-      <button class="btn" id="xJson">⬇️ Respaldo (.json)</button>
+      <button class="btn" id="xJson">🔒 Respaldo cifrado</button>
       <button class="btn sec" id="xImp">⬆️ Importar respaldo</button>
     </div>
     <input type="file" id="impIn" accept=".json,application/json" class="hide">
-    <p class="mut">Si trabajan varios encuestadores, cada uno exporta su respaldo y uno los importa todos en su teléfono o computador: se combinan sin duplicar. El respaldo incluye fotos y firmas.</p>
+    <label class="ck"><input type="checkbox" id="xPlain"><span>Exportar sin cifrar <i>(no recomendado: cualquiera que reciba el archivo puede leer los datos)</i></span></label>
+    <p class="mut">El respaldo se protege con una contraseña que usted elige: sin ella el archivo no se puede abrir, ni siquiera por IV Ingeniería. Compártala por un canal distinto al del archivo. Si trabajan varios encuestadores, cada uno exporta su respaldo y uno los importa todos: se combinan sin duplicar.</p>
   </div>
 </section>
 
@@ -268,6 +296,24 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
       <div><label class="f">Región</label><input type="text" id="c_region"></div>
     </div>
     <label class="f">Institución responsable (unidad técnica)</label><input type="text" id="c_ut">
+    <label class="f">Responsable de los datos personales (mandante del estudio)</label><input type="text" id="c_mandante" placeholder="Ej: DIRECCIÓN DE OBRAS HIDRÁULICAS, REGIÓN DE LOS LAGOS">
+    <label class="f">Entrega del estudio</label>
+    <div id="entregaInfo" class="mut"></div>
+    <div class="btns" style="margin-top:6px"><button class="btn sec" id="bEntrega">Marcar como entregado hoy</button></div>
+  </div>
+  <div class="card">
+    <h2>Protección de datos <span class="mut" style="text-transform:none;letter-spacing:0">(todos los proyectos)</span></h2>
+    <label class="f">Correo de contacto para los encuestados</label><input type="text" id="c_contacto" inputmode="email">
+    <label class="f">Dirección de la política de privacidad</label><input type="text" id="c_privUrl" inputmode="url">
+    <div class="row">
+      <div><label class="f">Conservar en el teléfono (meses tras la entrega)</label><input type="number" id="c_retMeses"></div>
+      <div><label class="f">Bloqueo automático (minutos)</label><input type="number" id="c_lockMin"></div>
+    </div>
+    <label class="ck"><input type="checkbox" id="c_kmzPersonal"><span>Incluir nombre, RUT y teléfono en el KMZ <i>(desactivado: el KMZ solo lleva N°, tipo, sector, coordenadas y fotos)</i></span></label>
+    <div style="margin-top:12px"><b style="font-size:14px">PIN de acceso</b> <span id="pinState" class="mut"></span></div>
+    <div class="btns" style="margin-top:6px"><button class="btn sec" id="bPinSet">Activar PIN</button><button class="btn sec hide" id="bPinOff">Quitar PIN</button></div>
+    <p class="mut">El PIN impide abrir la app a quien tome el teléfono. Mantenga también activo el bloqueo de pantalla del teléfono: así sus datos quedan cifrados por el propio teléfono.</p>
+    <button class="btn sec w" id="bPriv2">Ver política de privacidad</button>
   </div>
   <div class="card">
     <h2>Equipo y empresa <span class="mut" style="text-transform:none;letter-spacing:0">(todos los proyectos)</span></h2>
@@ -304,7 +350,7 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
     <p class="mut" id="storInfo"></p>
     <button class="btn bad w" id="bWipe">Borrar las encuestas de este proyecto</button>
   </div>
-  <p class="mut" style="text-align:center">Encuestas SSR · v2.0 (multi-proyecto)</p>
+  <p class="mut" style="text-align:center">Encuestas SSR · v3.0 (protección de datos)</p>
 </section>
 </main>
 
@@ -325,6 +371,25 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
   <p class="mut">Cada proyecto tiene su propia configuración, numeración y encuestas. Los exportables (Excel, KMZ, informe, fichas, respaldo) salen solo del proyecto activo.</p>
 </div></div>
 <div id="print"></div>
+<div class="sheet hide" id="privSheet"><div>
+  <div style="display:flex;align-items:center;margin-bottom:8px"><h2 style="flex:1;margin:0;font-size:17px;color:var(--pri)">Política de privacidad</h2><button class="btn sec" id="privClose">Cerrar</button></div>
+  <div class="priv" id="privBody"></div>
+</div></div>
+<div class="modal hide" id="pwModal"><div>
+  <h3 id="pwTitle"></h3><p class="mut" id="pwHelp"></p>
+  <input type="password" id="pw1" autocomplete="new-password" placeholder="Contraseña">
+  <input type="password" id="pw2" autocomplete="new-password" placeholder="Repita la contraseña" style="margin-top:8px">
+  <div id="pwErr" class="errbox hide"></div>
+  <div class="btns" style="margin-top:12px"><button class="btn sec" id="pwCancel">Cancelar</button><button class="btn" id="pwOk">Aceptar</button></div>
+</div></div>
+<div id="lock" class="hide">
+  <img id="lockLogo" style="height:64px;background:#fff;border-radius:8px;padding:4px">
+  <div id="lockTitle" style="font-size:19px;font-weight:700;margin-top:14px">Ingrese su PIN</div>
+  <div class="dots" id="lockDots"></div>
+  <div class="msg" id="lockMsg"></div>
+  <div class="pad" id="lockPad"></div>
+  <a href="#" id="lockForgot">Olvidé mi PIN</a>
+</div>
 
 <script>
 'use strict';
@@ -333,9 +398,9 @@ canvas#sig{width:100%;height:170px;border:1px solid var(--bd);border-radius:8px;
    ==================================================================== */
 const OPC = {
   tipo:[['VIVIENDA','Vivienda'],['SM','Sin moradores'],['PUBLICO','Público'],['COMERCIO','Comercio'],['OTRO','Otro']],
-  ingresoNC:[['1','No contesta']],
+  ingresoTramo:[],   // se completa con los rangos del proyecto
   ubic:[[1,'Camino vecinal'],[2,'Ruta vialidad'],[3,'Camino privado']],
-  indigena:[['SI','Sí'],['NO','No']],
+  indigena:[['SI','Sí'],['NO','No'],['NR','No responde']],
   tenencia:[[1,'Propia'],[2,'Arriendo'],[3,'Otro']],
   calidad:[['B','Bueno'],['R','Regular'],['M','Malo']],
   material:[[1,'Sólida'],[2,'Madera'],[3,'Mixta']],
@@ -343,7 +408,7 @@ const OPC = {
   sanitario:[[1,'Alcantarillado'],[2,'Fosa séptica'],[3,'Pozo negro'],[4,'Otro']],
   bano:[[1,'Fuera'],[2,'Dentro']],
   energia:[['SI','Sí'],['NO','No']],
-  enfermedad:[['SI','Sí'],['NO','No']],
+  enfermedad:[['SI','Sí'],['NO','No'],['NR','No responde']],
   acepta:[['SI','Sí acepta'],['NO','No acepta']],
   categoria:[['AUTO','Automática'],['BEN','Beneficiaria'],['POS','Postergada'],['NOB','No beneficiaria']],
 };
@@ -356,11 +421,15 @@ const DEF_CFG = {
   proyecto:'DISEÑO DE INGENIERÍA PARA EL MEJORAMIENTO Y AMPLIACIÓN DEL SSR ___. COMUNA DE ___. REGIÓN DE ___',
   ssr:'', comuna:'', region:'', ut:'ILUSTRE MUNICIPALIDAD DE ___', encuestador:'', profesional:'', empresa:'IV INGENIERÍA',
   obsList:'CABAÑAS ASOCIADAS\nMÁS DE UNA VIVIENDA EN EL PREDIO\nCASA DE VERANEO / USO TEMPORAL\nNEGOCIO O LOCAL EN LA VIVIENDA\nUSO AGRÍCOLA O ANIMALES\nPROPIETARIO NO RESIDE\nACCESO DIFÍCIL\nCONSTRUCCIÓN EN CURSO\nVOLVER A VISITAR',
-  r1:440000, r2:700000, r3:1050000, acc:5, nread:8, lastBackup:0, devId:''
+  r1:440000, r2:700000, r3:1050000, acc:5, nread:8, lastBackup:0, devId:'',
+  mandante:'', entregado:0,
+  contacto:'contacto@ivingenieria.cl', privUrl:'https://www.ivingenieria.cl/privacidad-encuestas', retMeses:6, lockMin:5, kmzPersonal:false,
+  pinHash:'', pinSalt:'', recHash:''
 };
 let CFG = null;
 /* Proyectos: cada uno guarda sus datos propios; el resto de la configuración es común */
-const PROJ_KEYS=['proyecto','ssr','comuna','region','ut','r1','r2','r3','lastBackup'];
+const PROJ_KEYS=['proyecto','ssr','comuna','region','ut','r1','r2','r3','lastBackup','mandante','entregado'];
+const CONS_VER='2026-11-v1';
 let PROJS=[];
 function pick(o,keys){ const r={}; keys.forEach(k=>{ if(o[k]!==undefined) r[k]=o[k]; }); return r; }
 function newProjId(){ return 'p-'+(CFG&&CFG.devId||'x')+'-'+Date.now().toString(36); }
@@ -409,7 +478,7 @@ const xesc = s => String(s==null?'':s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'
 function toast(msg, ms=2200){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'), ms); }
 function uid(){ return CFG.devId+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6); }
 function num(v){ if(v===''||v==null) return null; const n=Number(String(v).replace(',','.')); return isFinite(n)?n:null; }
-function fmtDate(ts){ const d=new Date(ts); const p=n=>String(n).padStart(2,'0'); return `${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function fmtDate(ts){ if(!ts) return ''; const d=new Date(ts); const p=n=>String(n).padStart(2,'0'); return `${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 function fileStamp(){ const d=new Date(); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
 function slug(s){ return String(s||'SSR').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,40)||'SSR'; }
 
@@ -421,6 +490,7 @@ function rutFormat(r){ const c=rutClean(r); if(c.length<2) return String(r||'').
 
 // Código de ingreso
 function ingresoCode(r){
+  if(r.ingresoTramo) return Number(r.ingresoTramo);
   if(r.ingresoNC) return 5;
   const v = num(r.ingreso); if(v==null) return null;
   if(v<=CFG.r1) return 1; if(v<=CFG.r2) return 2; if(v<=CFG.r3) return 3; return 4;
@@ -510,9 +580,17 @@ let RECS = [];
 let ALL=[];
 async function reload(){
   ALL = await DB.all();
-  for(const r of ALL){ if(!r.proj){ r.proj=CFG.activeProj; await DB.put(r); } }  // encuestas de la versión anterior → proyecto activo
+  for(const r of ALL){
+    let ch=false;
+    if(!r.proj){ r.proj=CFG.activeProj; ch=true; }                      // encuestas de la versión anterior → proyecto activo
+    if('ingreso' in r || 'ingresoNC' in r){                               // v3: se deja solo el tramo, se borra el monto
+      const p=PROJS.find(x=>x.id===r.proj)||CFG; const v=num(r.ingreso);
+      if(!r.ingresoTramo) r.ingresoTramo = r.ingresoNC?5 : v==null?null : v<=p.r1?1 : v<=p.r2?2 : v<=p.r3?3 : 4;
+      delete r.ingreso; delete r.ingresoNC; ch=true; }
+    if(ch) await DB.put(r);
+  }
   RECS = ALL.filter(r=>r.proj===CFG.activeProj).sort((a,b)=>(a.n||0)-(b.n||0));
-  refreshLists(); renderProjSheet();
+  refreshLists(); renderProjSheet(); refreshRet();
 }
 
 /* ====================================================================
@@ -520,24 +598,25 @@ async function reload(){
    ==================================================================== */
 let cur = null;      // registro en edición
 let curIsNew = true;
-const TXT_FIELDS = ['n','nombre','rut','fono','ocupacion','ingreso','habitantes','hombres','mujeres','sector','camino','comunidad','arranque','obs','cabanas','lat','lon'];
+const TXT_FIELDS = ['n','nombre','rut','fono','ocupacion','habitantes','hombres','mujeres','sector','camino','comunidad','arranque','obs','cabanas','lat','lon'];
 
 function blank(){
   const maxN = RECS.reduce((m,r)=>Math.max(m, r.n||0), 0);
   const lastSector = RECS.length ? (RECS.slice().sort((a,b)=>b.creado-a.creado)[0].sector||'') : '';
-  return { uid:uid(), proj:CFG.activeProj, n:maxN+1, tipo:'VIVIENDA', nombre:'', rut:'', fono:'', ocupacion:'', ingreso:'', ingresoNC:'', habitantes:'', hombres:'', mujeres:'',
-    sector:lastSector, ubic:null, camino:'', indigena:'NO', comunidad:'', tenencia:null, calidad:null, material:null, agua:null, sanitario:null, bano:null,
+  return { uid:uid(), proj:CFG.activeProj, n:maxN+1, tipo:'VIVIENDA', nombre:'', rut:'', fono:'', ocupacion:'', ingresoTramo:null, habitantes:'', hombres:'', mujeres:'',
+    sector:lastSector, ubic:null, camino:'', indigena:null, comunidad:'', tenencia:null, calidad:null, material:null, agua:null, sanitario:null, bano:null,
     energia:null, enfermedad:null, acepta:null, categoria:'AUTO', arranque:'', obs:'', obsTags:[], cabanas:'', lat:null, lon:null, acc:null, gpsN:0, gpsTs:null,
-    firma:null, fotoTab:null, fotoEdi:null, tabEnEdif:false, encuestador:CFG.encuestador, creado:Date.now(), modificado:Date.now() };
+    firma:null, fotoTab:null, fotoEdi:null, tabEnEdif:false, consiente:false, consSens:false, consTs:null, consSensTs:null, consVer:null, encuestador:CFG.encuestador, creado:Date.now(), modificado:Date.now() };
 }
 
 function renderChips(){
+  OPC.ingresoTramo = ingresoRangos().map(([k,l])=>[k, k===5?'No contesta':'$ '+l.toLowerCase()]);
   document.querySelectorAll('.chips[data-k]').forEach(box=>{
     const k=box.dataset.k;
     box.innerHTML = OPC[k].map(([v,l])=>`<button type="button" class="chip" data-v="${esc(v)}">${esc(l)}</button>`).join('');
     box.onclick = e=>{
       const b=e.target.closest('.chip'); if(!b) return;
-      let v=b.dataset.v; if(/^\d+$/.test(v) && k!=='ingresoNC') v=Number(v);
+      let v=b.dataset.v; if(/^\d+$/.test(v)) v=Number(v);
       cur[k] = (String(cur[k])===String(v) && k!=='categoria' && k!=='tipo') ? null : v;
       syncChips(); onFormChange();
     };
@@ -567,13 +646,14 @@ function syncChips(){
 function fillForm(){
   for(const k of TXT_FIELDS){ const el=$('f_'+k); if(el) el.value = cur[k]==null?'':cur[k]; }
   $('f_tabEnEdif').checked = !!cur.tabEnEdif;
+  $('f_consiente').checked = !!cur.consiente; $('f_consSens').checked = !!cur.consSens;
   syncChips(); renderObsTags(); drawSigFromData(); renderPhotos(); onFormChange();
   $('editInfo').textContent = curIsNew ? 'Encuesta nueva' : `Editando vivienda N° ${cur.n} · creada ${fmtDate(cur.creado)}`;
   showGpsSaved();
 }
 function readForm(){
   for(const k of TXT_FIELDS){ const el=$('f_'+k); if(!el) continue; let v=el.value.trim();
-    if(['n','habitantes','hombres','mujeres','ingreso','arranque','cabanas','lat','lon'].includes(k)) v = v===''?null:num(v);
+    if(['n','habitantes','hombres','mujeres','arranque','cabanas','lat','lon'].includes(k)) v = v===''?null:num(v);
     else if(k!=='obs') v=v.toUpperCase();
     cur[k]=v; }
   cur.tabEnEdif = $('f_tabEnEdif').checked;
@@ -581,8 +661,13 @@ function readForm(){
 function onFormChange(){
   readForm();
   const sm = cur.tipo==='SM';
-  $('secOcup').classList.toggle('hide', sm);
+  $('secCons').classList.toggle('hide', sm);
+  $('secOcup').classList.toggle('hide', sm || !cur.consiente);
+  $('noConsBox').classList.toggle('hide', sm || !!cur.consiente);
+  $('wrapInd').classList.toggle('hide', !cur.consSens); $('wrapEnf').classList.toggle('hide', !cur.consSens);
   $('f_comunidad').classList.toggle('hide', cur.indigena!=='SI');
+  $('consTxt').innerHTML = consHTML();
+  $('consInfo').textContent = cur.consLegacy ? 'Encuesta anterior a la v3: el consentimiento consta en la ficha y firma originales.' : cur.consiente ? `Consentimiento registrado: ${fmtDate(cur.consTs)}`+(cur.consSens?` · datos sensibles: ${fmtDate(cur.consSensTs)}`:'') : '';
   // duplicados
   const dup = RECS.find(r=>r.uid!==cur.uid && r.n===cur.n);
   $('dupWarn').classList.toggle('hide', !dup);
@@ -596,8 +681,6 @@ function onFormChange(){
   const h=num(cur.hombres), m=num(cur.mujeres), t=num(cur.habitantes);
   const hw=$('habWarn'), badH = h!=null && m!=null && t!=null && h+m!==t;
   hw.classList.toggle('hide', !badH); if(badH) hw.textContent=`Hombres + mujeres = ${h+m}, pero habitantes = ${t}.`;
-  // ingreso
-  const code=ingresoCode(cur); $('ingCode').textContent = code ? `Código ingreso (${code}): ${ingresoRangos()[code-1][1]}` : '';
   $('catAuto').textContent = 'Quedará como: ' + CAT_SHORT[catOf(cur)];
   $('declTxt').innerHTML = declHTML(cur);
 }
@@ -615,7 +698,8 @@ function validate(r){
   if(RECS.find(x=>x.uid!==r.uid && x.n===r.n)) errs.push(`El N° ${r.n} ya existe.`);
   if(r.lat==null||r.lon==null) warns.push('sin coordenadas GPS');
   if(!r.fotoEdi && !r.fotoTab) warns.push('sin foto');
-  if(r.tipo!=='SM'){
+  if(r.tipo!=='SM' && !r.consiente) warns.push('SIN CONSENTIMIENTO: no se guardarán nombre, RUT ni otros datos personales');
+  if(r.tipo!=='SM' && r.consiente){
     if(!r.nombre) warns.push('sin nombre');
     if(r.rut && !rutValid(r.rut)) warns.push('RUT con dígito verificador incorrecto');
     if(r.acepta==='SI' && !r.firma) warns.push('acepta pero no firmó');
@@ -630,6 +714,7 @@ async function saveCur(){
   const {errs,warns} = validate(cur);
   if(errs.length){ alert(errs.join('\n')); return; }
   if(warns.length && !confirm('Atención: '+warns.join(', ')+'.\n\n¿Guardar de todas formas?')) return;
+  minimize(cur);
   cur.modificado = Date.now(); if(!cur.encuestador) cur.encuestador=CFG.encuestador; if(!cur.proj) cur.proj=CFG.activeProj;
   await DB.put(JSON.parse(JSON.stringify(cur)));
   await reload();
@@ -638,7 +723,24 @@ async function saveCur(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function newForm(){ cur=blank(); curIsNew=true; fillForm(); }
-function editRec(u){ const r=RECS.find(x=>x.uid===u); if(!r) return; cur=JSON.parse(JSON.stringify(r)); curIsNew=false; fillForm(); showTab('t-form'); window.scrollTo(0,0); }
+/* Minimización: lo que no se autorizó, no se guarda */
+const PERSONAL=['nombre','rut','fono','ocupacion','ingresoTramo','habitantes','hombres','mujeres','ubic','camino','indigena','comunidad','enfermedad','acepta','arranque','firma','consSens','consSensTs'];
+function minimize(r){
+  delete r.ingreso; delete r.ingresoNC;                      // nunca se guarda el monto, solo el tramo
+  if(r.tipo==='SM') return;
+  if(!r.consiente){ PERSONAL.forEach(k=>{ r[k]= (k==='consSens')?false:null; }); r.consTs=null; r.consVer=null; return; }
+  if(!r.consSens){ r.indigena=null; r.comunidad=''; r.enfermedad=null; r.consSensTs=null; }
+  if(r.indigena!=='SI') r.comunidad='';
+}
+function consHTML(){
+  const b=s=>`<b>${esc(s)}</b>`, resp=CFG.mandante||CFG.ut||'el mandante del estudio';
+  return `${b(CFG.empresa||'IV INGENIERÍA')}, por encargo de ${b(resp)}, realiza esta encuesta para el proyecto de agua potable ${b(CFG.ssr||'')}. `+
+   `Se registrarán su nombre, RUT, teléfono, el hogar (habitantes, ocupación, tramo de ingreso), las características de la vivienda, su ubicación y fotos de la edificación, `+
+   `solo para el diseño y la postulación del proyecto. ${b(resp)} es el responsable de estos datos; no se usan con fines comerciales. `+
+   `Puede pedir acceso, corrección o eliminación en ${b(CFG.contacto)}. Se conservan en el teléfono hasta ${CFG.retMeses} meses después de entregado el estudio. `+
+   `Participar es voluntario y puede retirar su consentimiento cuando quiera.`;
+}
+function editRec(u){ const r=RECS.find(x=>x.uid===u); if(!r) return; cur=JSON.parse(JSON.stringify(r)); if(!cur.ingresoTramo && ingresoCode(cur)) cur.ingresoTramo=ingresoCode(cur); if(cur.consiente===undefined && cur.tipo!=='SM' && cur.nombre){ cur.consiente=true; cur.consSens=true; cur.consLegacy=true; } curIsNew=false; fillForm(); showTab('t-form'); window.scrollTo(0,0); }
 
 /* ====================================================================
    GPS (funciona sin señal celular)
@@ -820,6 +922,7 @@ function drawMap(){
 /* ====================================================================
    EXPORTAR EXCEL (.xlsx) — mismo orden de columnas que la base actual
    ==================================================================== */
+function consCell(r){ if(r.tipo==='SM') return 'NO APLICA (SM)'; if(r.consiente===undefined || r.consLegacy) return 'FICHA PAPEL / FIRMA'; return r.consiente?('SI '+fmtDate(r.consTs)):'NO (SIN DATOS PERSONALES)'; }
 function colL(i){ let s=''; i++; while(i>0){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
 const X=(cond)=>cond?'X':'';
 function xlsxColumns(){
@@ -836,17 +939,18 @@ function xlsxColumns(){
     ...['ALCANTARILLADO','FOSA SÉPTICA','POZO NEGRO','OTRO'].map((o,i)=>opt('DATOS VIVIENDA','SERVICIO SANITARIO',o,r=>X(r.sanitario===i+1),8)),
     ...['FUERA','DENTRO'].map((o,i)=>opt('DATOS VIVIENDA','UBICACIÓN BAÑO',o,r=>X(r.bano===i+1),7)),
     ...['SI','NO'].map(o=>opt('DATOS VIVIENDA','ENERGÍA ELÉCTRICA',o,r=>X(r.energia===o),5)),
-    ...['SI','NO'].map(o=>opt('DATOS VIVIENDA','ENFERMEDAD ENTÉRICA',o,r=>X(r.enfermedad===o),5)),
+    ...['SI','NO'].map(o=>opt('DATOS VIVIENDA','ENFERMEDAD ENTÉRICA',o,r=>r.enfermedad==='NR'?'NR':X(r.enfermedad===o),5)),
     opt('CONDICIÓN DE LOS OCUPANTES','ACTIVIDAD','OCUPACIÓN',r=>r.ocupacion,22),
     opt('CONDICIÓN DE LOS OCUPANTES','INGRESOS','(1) (2) (3) (4) (5)',r=>r.tipo==='SM'?'':ingresoCode(r),10),
     opt('CONDICIÓN DE LOS OCUPANTES','HABITANTES','N°',r=>num(r.habitantes),9),
     opt('CONDICIÓN DE LOS OCUPANTES','HOMBRES','N°',r=>num(r.hombres),8),
     opt('CONDICIÓN DE LOS OCUPANTES','MUJERES','N°',r=>num(r.mujeres),8),
     ...['CAMINO VECINAL','RUTA VIALIDAD','CAMINO PRIVADO'].map((o,i)=>opt('CONDICIÓN DE LOS OCUPANTES','UBICACIÓN VIVIENDA',o,r=>X(r.ubic===i+1),9)),
-    opt('PERTENECE A ALGUNA COMUNIDAD INDÍGENA (NOMBRE DE LA COMUNIDAD)',null,null,r=>r.tipo==='SM'?'':(r.indigena==='SI'?(r.comunidad||'SI'):'NO'),16),
+    opt('PERTENECE A ALGUNA COMUNIDAD INDÍGENA (NOMBRE DE LA COMUNIDAD)',null,null,r=>r.tipo==='SM'?'':(r.indigena==='SI'?(r.comunidad||'SI'):r.indigena==='NO'?'NO':r.indigena==='NR'?'NO RESPONDE':''),16),
     opt('TIPO',null,null,r=>r.tipo,11),
     opt('ACEPTA EL SISTEMA',null,null,r=>r.tipo==='SM'?'':(r.acepta||''),10),
-    opt('DATOS ADICIONALES (APP)','INGRESO DECLARADO ($)',null,r=>r.ingresoNC?'NC':num(r.ingreso),13),
+    opt('DATOS ADICIONALES (APP)','CONSENTIMIENTO',null,r=>consCell(r),18),
+    opt('DATOS ADICIONALES (APP)','CONSENT. DATOS SENSIBLES',null,r=>r.tipo==='SM'||r.consiente===undefined||r.consLegacy?'':r.consSens?('SI '+fmtDate(r.consSensTs)):'NO',18),
     opt('DATOS ADICIONALES (APP)','NOMBRE CAMINO',null,r=>r.camino,16),
     opt('DATOS ADICIONALES (APP)','CATEGORÍA KMZ',null,r=>CAT_SHORT[catOf(r)].toUpperCase(),16),
     opt('DATOS ADICIONALES (APP)','ARRANQUE LEJANO (m)',null,r=>num(r.arranque),10),
@@ -1024,7 +1128,7 @@ function buildKmz(recs){
     let imgs='';
     [['fotoTab','tablilla'],['fotoEdi','edificacion']].forEach(([k,n])=>{ if(r[k]){ const fn=`files/viv_${r.n}_${n}.jpg`; files.push({name:fn,data:dataURLtoU8(r[k].src)}); imgs+=`<img src="${fn}" width="260"><br>`; } });
     const u=toUTM(r.lat,r.lon);
-    const desc = `<table style="font-family:Arial;font-size:12px">${row('N° vivienda',r.n)}${row('Nombre',r.tipo==='SM'?'SIN MORADORES':r.nombre)}${row('RUT',r.rut)}${row('Teléfono',r.fono)}${row('Sector',r.sector)}${row('Tipo',r.tipo)}${row('Acepta sistema',r.acepta)}${row('Habitantes',r.habitantes)}${row('Abastecimiento',opt('agua',r.agua))}${row('Serv. sanitario',opt('sanitario',r.sanitario))}${row('UTM '+u.zone,`E ${u.E.toFixed(1)}  N ${u.N.toFixed(1)}`)}${row('Precisión GPS',r.acc!=null?'±'+r.acc+' m':'manual')}${row('Fecha',fmtDate(r.creado))}${row('Cabañas asociadas',num(r.cabanas))}${row('Observaciones',obsText(r))}</table>${imgs}`;
+    const desc = `<table style="font-family:Arial;font-size:12px">${row('N° vivienda',r.n)}${CFG.kmzPersonal?row('Nombre',r.tipo==='SM'?'SIN MORADORES':r.nombre)+row('RUT',r.rut)+row('Teléfono',r.fono):row('Ocupación',r.tipo==='SM'?'SIN MORADORES':'')}${row('Sector',r.sector)}${row('Tipo',r.tipo)}${row('Acepta sistema',r.acepta)}${row('Habitantes',r.habitantes)}${row('Abastecimiento',opt('agua',r.agua))}${row('Serv. sanitario',opt('sanitario',r.sanitario))}${row('UTM '+u.zone,`E ${u.E.toFixed(1)}  N ${u.N.toFixed(1)}`)}${row('Precisión GPS',r.acc!=null?'±'+r.acc+' m':'manual')}${row('Fecha',fmtDate(r.creado))}${row('Cabañas asociadas',num(r.cabanas))}${row('Observaciones',obsText(r))}</table>${imgs}`;
     folders[catOf(r)].push(`<Placemark><name>${xesc(r.n)}</name><description><![CDATA[${desc.replace(/]]>/g,']]&gt;')}]]></description><styleUrl>#s_${catOf(r)}</styleUrl><Point><coordinates>${r.lon},${r.lat},0</coordinates></Point></Placemark>`);
   });
   files.push({name:'files/logo.png',data:dataURLtoU8(LOGO.src)});
@@ -1060,7 +1164,7 @@ function buildDocx(recs){
   const W=9638; // ancho útil (17 cm)
   const year=new Date().getFullYear();
   const sorted=recs.slice().sort((a,b)=>(a.n||0)-(b.n||0));
-  const nombreOf=r=>r.tipo==='SM'?'SIN MORADORES':(r.nombre||(r.tipo!=='VIVIENDA'?r.tipo:'—'));
+  const nombreOf=r=>r.tipo==='SM'?'SIN MORADORES':r.consiente===false?'NO AUTORIZA DATOS PERSONALES':(r.nombre||(r.tipo!=='VIVIENDA'?r.tipo:'—'));
   const fono=f=>{ const d=String(f||'').replace(/\D/g,''); if(!d) return '—'; if(d.length===9&&d[0]==='9') return `+56 9 ${d.slice(1,5)} ${d.slice(5)}`; return f; };
   const condOf=r=>{ const c=catOf(r); return (r.tipo!=='VIVIENDA'&&r.tipo!=='SM'?r.tipo+' · ':'')+CAT_SHORT[c].toUpperCase(); };
 
@@ -1172,7 +1276,7 @@ function fichaHTML(r){
   <tr>${td('R.U.T.',r.rut)}${td('(2) Calidad',o('calidad',r.calidad))}</tr>
   <tr>${td('N° celular',r.fono)}${td('(3) Material',o('material',r.material))}</tr>
   <tr>${td('Ocupación',r.ocupacion)}${td('(4) Abastecimiento agua',o('agua',r.agua))}</tr>
-  <tr>${td('Ingresos ($/mes)',r.ingresoNC?'NO CONTESTA':r.ingreso)}${td('(5) Servicio sanitario',o('sanitario',r.sanitario))}</tr>
+  <tr>${td('Ingreso (tramo)',ingresoCode(r)?`(${ingresoCode(r)}) ${ingresoRangos()[ingresoCode(r)-1][1]}`:'')}${td('(5) Servicio sanitario',o('sanitario',r.sanitario))}</tr>
   <tr>${td('Habitantes / H / M',`${r.habitantes??'—'} / ${r.hombres??'—'} / ${r.mujeres??'—'}`)}${td('(6) Ubicación baño',o('bano',r.bano))}</tr>
   <tr>${td('Sector',r.sector)}${td('(7) Energía eléctrica',o('energia',r.energia))}</tr>
   <tr>${td('Ubicación vivienda',o('ubic',r.ubic)+(r.camino?' — '+r.camino:''))}${td('(8) Enfermedad entérica',o('enfermedad',r.enfermedad))}</tr>
@@ -1180,6 +1284,7 @@ function fichaHTML(r){
   <tr>${td('Coordenadas',r.lat!=null?`${r.lat}, ${r.lon}`:'—')}${td('UTM '+(u?u.zone:''),u?`E ${u.E.toFixed(1)} N ${u.N.toFixed(1)}`:'—')}</tr>
   <tr>${td('Fecha',fmtDate(r.creado))}${td('Encuestador',r.encuestador)}</tr></table>
   ${obsText(r)?`<p style="font-size:9.5pt"><b>Observaciones:</b> ${esc(obsText(r))}</p>`:''}
+  ${r.tipo==='SM'?'':`<p style="font-size:9pt"><b>Consentimiento informado:</b> ${esc(consCell(r))}${r.consiente&&!r.consLegacy?` · <b>Datos sensibles:</b> ${r.consSens?'SÍ '+fmtDate(r.consSensTs):'NO'}`:''}. Responsable de los datos: ${esc(CFG.mandante||CFG.ut)}. Encargado: ${esc(CFG.empresa)}. Política: ${esc(CFG.privUrl)} · Contacto: ${esc(CFG.contacto)}</p>`}
   ${r.tipo==='SM'?'':`<h3 style="margin-top:12px">DECLARACIÓN JURADA</h3><div class="dj">${declHTML(r)}</div>
   <div class="firma">${r.firma?`<img src="${r.firma}">`:'<div style="height:60px"></div>'}<div style="border-top:1px solid #000;width:60%;margin:0 auto;font-size:9pt">Firma</div></div>`}
   </div>`;
@@ -1189,14 +1294,59 @@ function printFichas(recs){ $('print').innerHTML = recs.map(fichaHTML).join('');
 /* ====================================================================
    RESPALDO / IMPORTACIÓN
    ==================================================================== */
+/* Cifrado de respaldos: AES-GCM 256 con clave derivada de la contraseña (PBKDF2-SHA256) */
+const KDF_ITER=250000;
+function u8b64(u8){ let s=''; for(let i=0;i<u8.length;i+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s); }
+function b64u8(b){ const s=atob(b), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+async function deriveKey(pass,salt,iter){
+  const base=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encryptObj(obj,pass){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass,salt,KDF_ITER);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(obj))));
+  return {app:'encuestas-ssr',formato:'cifrado-v1',proyecto:obj.project&&obj.project.ssr||'',exportado:obj.exportado,cifrado:'AES-GCM-256',kdf:'PBKDF2-SHA256',iter:KDF_ITER,salt:u8b64(salt),iv:u8b64(iv),data:u8b64(ct)};
+}
+async function decryptObj(env,pass){
+  const key=await deriveKey(pass,b64u8(env.salt),env.iter||KDF_ITER);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64u8(env.iv)},key,b64u8(env.data));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function askPassword(title,help,confirm2){
+  return new Promise(res=>{
+    $('pwTitle').textContent=title; $('pwHelp').textContent=help; $('pw1').value=''; $('pw2').value=''; $('pwErr').classList.add('hide');
+    $('pw2').classList.toggle('hide',!confirm2); $('pwModal').classList.remove('hide'); setTimeout(()=>$('pw1').focus(),50);
+    const done=v=>{ $('pwModal').classList.add('hide'); $('pwOk').onclick=$('pwCancel').onclick=null; res(v); };
+    $('pwCancel').onclick=()=>done(null);
+    $('pwOk').onclick=()=>{ const a=$('pw1').value, b=$('pw2').value, err=t=>{ $('pwErr').textContent=t; $('pwErr').classList.remove('hide'); };
+      if(confirm2 && a.length<8) return err('Use al menos 8 caracteres.');
+      if(confirm2 && a!==b) return err('Las contraseñas no coinciden.');
+      if(!a) return err('Ingrese la contraseña.');
+      done(a); };
+  });
+}
 async function exportJson(){
   const proj=PROJS.find(p=>p.id===CFG.activeProj);
-  const data={app:'encuestas-ssr',version:2,exportado:Date.now(),project:proj,config:CFG,records:RECS};
-  await deliver(new Blob([JSON.stringify(data)],{type:'application/json'}), `respaldo_encuestas_${slug(CFG.ssr)}_${CFG.encuestador?slug(CFG.encuestador)+'_':''}${fileStamp()}.json`);
+  const data={app:'encuestas-ssr',version:3,exportado:Date.now(),project:proj,config:pick(CFG,['encuestador','profesional','empresa']),records:RECS};
+  let out=data, name=`respaldo_${slug(CFG.ssr)}_${CFG.encuestador?slug(CFG.encuestador)+'_':''}${fileStamp()}`;
+  if(!$('xPlain').checked){
+    const pass=await askPassword('Contraseña del respaldo','Quien importe este respaldo necesitará esta contraseña. Anótela: no se puede recuperar.',true);
+    if(!pass) return;
+    toast('Cifrando…'); out=await encryptObj(data,pass); name+='_cifrado';
+  } else if(!confirm('El respaldo quedará SIN cifrar: cualquiera que reciba el archivo podrá leer los datos personales. ¿Continuar?')) return;
+  await deliver(new Blob([JSON.stringify(out)],{type:'application/json'}), name+'.json');
   CFG.lastBackup=Date.now(); saveCfg(); refreshLists();
 }
 async function importJson(file){
   let data; try{ data=JSON.parse(await file.text()); }catch(e){ alert('Archivo no válido.'); return; }
+  if(data && data.formato==='cifrado-v1'){
+    for(let intento=0;;intento++){
+      const pass=await askPassword('Respaldo cifrado',`Ingrese la contraseña del respaldo${data.proyecto?' de '+data.proyecto:''}.`+(intento?' La anterior no es correcta.':''),false);
+      if(!pass) return;
+      try{ toast('Descifrando…'); data=await decryptObj(data,pass); break; }catch(e){ if(intento>=4){ alert('Contraseña incorrecta.'); return; } }
+    }
+  }
   if(!data||!Array.isArray(data.records)){ alert('El archivo no es un respaldo de esta app.'); return; }
   // 1) ¿A qué proyecto pertenece el respaldo?
   const src = data.project || pick(data.config||{},PROJ_KEYS);
@@ -1217,8 +1367,8 @@ async function importJson(file){
     if(inTarget.find(x=>x.n===r.n)) conflictos.push(r.n);
     await DB.put(r); nuevos++;
   }
+  if(target.id===CFG.activeProj){ Object.assign(CFG, pick(target,PROJ_KEYS)); fillCfg(); }
   saveCfg();
-  if(target.id===CFG.activeProj){ Object.assign(CFG, pick(target,PROJ_KEYS)); saveCfg(); fillCfg(); }
   await reload();
   alert(`Importación lista en ${projName(target)}${creado?' (proyecto nuevo)':''}: ${nuevos} nuevas, ${act} actualizadas.` + (conflictos.length?`\n\nOjo: N° de vivienda repetidos (de otro encuestador): ${[...new Set(conflictos)].join(', ')}. Revíselos en el listado.`:''));
   if(target.id!==CFG.activeProj && confirm(`¿Abrir ahora el proyecto ${projName(target)}?`)) await switchProject(target.id);
@@ -1232,7 +1382,7 @@ function renderProjSheet(){
   const list=PROJS.filter(p=>show||!p.archived||p.id===CFG.activeProj).sort((a,b)=>(a.archived-b.archived)||(b.creado-a.creado));
   $('pjList').innerHTML=list.map(p=>{
     const n=ALL.filter(r=>r.proj===p.id).length, isA=p.id===CFG.activeProj;
-    return `<div class="pj${isA?' act':''}" data-id="${p.id}"><div class="main"><div class="nm">${esc(projName(p))}${isA?'<span class="badge" style="background:var(--pri);color:#fff">activo</span>':''}${p.archived?'<span class="badge">archivado</span>':''}</div>
+    return `<div class="pj${isA?' act':''}" data-id="${p.id}"><div class="main"><div class="nm">${esc(projName(p))}${isA?'<span class="badge" style="background:var(--pri);color:#fff">activo</span>':''}${p.archived?'<span class="badge">archivado</span>':''}${retLimit(p)&&Date.now()>+retLimit(p)?'<span class="badge" style="background:#fbe6e3;color:#c0392b">borrar datos</span>':''}</div>
       <div class="mut">${esc([p.comuna,p.region].filter(Boolean).join(' · ')||'—')} · ${n} encuesta${n===1?'':'s'}</div></div>
       ${isA?'':'<button data-a="open">Abrir</button>'}<button data-a="arch">${p.archived?'Restaurar':'Archivar'}</button>${isA?'':'<button data-a="del" style="color:var(--bad)">🗑</button>'}</div>`;
   }).join('') || '<p class="mut">No hay proyectos.</p>';
@@ -1261,9 +1411,101 @@ $('pjNew').onclick=async()=>{
 /* ====================================================================
    CONFIGURACIÓN
    ==================================================================== */
-const CFG_FIELDS=['proyecto','ssr','comuna','region','ut','encuestador','profesional','empresa','obsList','r1','r2','r3','acc','nread'];
-function fillCfg(){ CFG_FIELDS.forEach(k=>$('c_'+k).value=CFG[k]??''); $('hTitle').innerHTML=esc(CFG.ssr?('SSR '+CFG.ssr):'Proyecto sin nombre')+'<small>▾</small>'; }
-CFG_FIELDS.forEach(k=>$('c_'+k).addEventListener('change',e=>{ let v=e.target.value.trim(); if(['r1','r2','r3','acc','nread'].includes(k)) v=num(v)||DEF_CFG[k]; CFG[k]=v; saveCfg(); fillCfg(); renderProjSheet(); if(k==='obsList') renderObsTags(); if(cur) onFormChange(); }));
+/* ====================================================================
+   PROTECCIÓN DE DATOS: PIN, POLÍTICA, PLAZO DE CONSERVACIÓN
+   ==================================================================== */
+async function sha(t){ return u8b64(new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(t)))); }
+const PINLEN=6;
+const LOCK={buf:'',mode:'unlock',first:'',fails:0,until:0,open:false};
+let lastAct=Date.now(), hiddenAt=0;
+function showLock(mode){
+  LOCK.mode=mode; LOCK.buf=''; LOCK.open=true; $('lock').classList.remove('hide');
+  $('lockTitle').textContent={unlock:'Ingrese su PIN',set1:`Elija un PIN de ${PINLEN} dígitos`,set2:'Repita el PIN',off:'Ingrese su PIN actual'}[mode];
+  $('lockForgot').classList.toggle('hide',mode!=='unlock'); $('lockMsg').textContent=''; renderPad();
+}
+function hideLock(){ LOCK.open=false; $('lock').classList.add('hide'); lastAct=Date.now(); }
+function renderPad(){
+  $('lockDots').innerHTML=Array.from({length:PINLEN},(_,i)=>`<i class="${i<LOCK.buf.length?'on':''}"></i>`).join('');
+  const left = LOCK.mode==='unlock' ? '' : 'Cancelar';
+  $('lockPad').innerHTML=['1','2','3','4','5','6','7','8','9'].map(k=>`<button data-k="${k}">${k}</button>`).join('')+
+    `<button class="t" data-k="cancel">${left}</button><button data-k="0">0</button><button class="t" data-k="del">Borrar</button>`;
+}
+$('lockPad').onclick=async e=>{
+  const b=e.target.closest('button'); if(!b) return; const k=b.dataset.k;
+  if(Date.now()<LOCK.until){ $('lockMsg').textContent=`Espere ${Math.ceil((LOCK.until-Date.now())/1000)} s`; return; }
+  if(k==='cancel'){ if(LOCK.mode!=='unlock') hideLock(); return; }
+  if(k==='del') LOCK.buf=LOCK.buf.slice(0,-1); else if(LOCK.buf.length<PINLEN) LOCK.buf+=k;
+  renderPad(); if(LOCK.buf.length<PINLEN) return;
+  const pin=LOCK.buf; LOCK.buf='';
+  if(LOCK.mode==='unlock'||LOCK.mode==='off'){
+    if(await sha(CFG.pinSalt+pin)===CFG.pinHash){
+      LOCK.fails=0;
+      if(LOCK.mode==='off'){ CFG.pinHash=CFG.pinSalt=CFG.recHash=''; saveCfg(); fillProt(); toast('PIN desactivado'); }
+      hideLock(); return;
+    }
+    LOCK.fails++; if(LOCK.fails>=5) LOCK.until=Date.now()+30000*(LOCK.fails-4);
+    $('lockMsg').textContent='PIN incorrecto'+(LOCK.fails>=5?' · espere un momento':''); renderPad(); return;
+  }
+  if(LOCK.mode==='set1'){ LOCK.first=pin; showLock('set2'); return; }
+  if(LOCK.mode==='set2'){
+    if(pin!==LOCK.first){ showLock('set1'); $('lockMsg').textContent='No coinciden. Intente de nuevo.'; return; }
+    const salt=u8b64(crypto.getRandomValues(new Uint8Array(16)));
+    const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r=crypto.getRandomValues(new Uint8Array(8));
+    const code=Array.from(r,x=>A[x%A.length]).join('');
+    CFG.pinSalt=salt; CFG.pinHash=await sha(salt+pin); CFG.recHash=await sha(salt+code); saveCfg(); fillProt(); hideLock();
+    alert(`PIN activado.\n\nCódigo de recuperación: ${code.slice(0,4)}-${code.slice(4)}\n\nAnótelo y guárdelo fuera del teléfono (por ejemplo, en la oficina). Es la única forma de entrar si olvida el PIN.`);
+  }
+};
+$('lockForgot').onclick=async e=>{
+  e.preventDefault();
+  const c=(prompt('Ingrese el código de recuperación (8 caracteres) que se mostró al activar el PIN:')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!c) return;
+  if(await sha(CFG.pinSalt+c)===CFG.recHash){ CFG.pinHash=CFG.pinSalt=CFG.recHash=''; saveCfg(); fillProt(); hideLock(); showTab('t-cfg'); toast('PIN eliminado. Active uno nuevo en Ajustes.',3500); }
+  else alert('Código incorrecto. Sin el código de recuperación no es posible entrar; contacte al administrador de la app.');
+};
+['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,()=>{ if(!LOCK.open) lastAct=Date.now(); },true));
+setInterval(()=>{ if(CFG.pinHash && !LOCK.open && Date.now()-lastAct > (CFG.lockMin||5)*60000) showLock('unlock'); },15000);
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ hiddenAt=Date.now(); return; }
+  if(CFG.pinHash && !LOCK.open && hiddenAt && Date.now()-hiddenAt > (CFG.lockMin||5)*60000) showLock('unlock');
+});
+$('bPinSet').onclick=()=>showLock('set1');
+$('bPinOff').onclick=()=>showLock('off');
+
+function retLimit(p){ if(!p||!p.entregado) return null; const d=new Date(p.entregado); d.setMonth(d.getMonth()+(CFG.retMeses||6)); return d; }
+function fillProt(){
+  const on=!!CFG.pinHash;
+  $('pinState').textContent=on?'· activado':'· desactivado'; $('bPinSet').textContent=on?'Cambiar PIN':'Activar PIN'; $('bPinOff').classList.toggle('hide',!on);
+  const lim=retLimit(CFG);
+  $('entregaInfo').textContent = CFG.entregado ? `Entregado el ${fmtDate(CFG.entregado).slice(0,10)}. Las encuestas deben borrarse de este teléfono a partir del ${fmtDate(+lim).slice(0,10)}.` : 'Aún no entregado.';
+  $('bEntrega').textContent = CFG.entregado ? 'Quitar marca de entrega' : 'Marcar como entregado hoy';
+}
+$('bEntrega').onclick=()=>{ CFG.entregado = CFG.entregado?0:Date.now(); saveCfg(); fillProt(); refreshRet(); renderProjSheet(); };
+function refreshRet(){
+  const lim=retLimit(CFG), vencido = lim && Date.now()>+lim && RECS.length>0;
+  const html = vencido ? `<div class="retban"><b>Plazo de conservación cumplido.</b> ${esc(projName(CFG))} se entregó el ${fmtDate(CFG.entregado).slice(0,10)}. Exporte un respaldo cifrado final para el archivo y borre las ${RECS.length} encuestas de este teléfono. <div class="btns" style="margin-top:8px"><button class="btn bad" onclick="showTab('t-cfg');setTimeout(()=>$('bWipe').scrollIntoView({behavior:'smooth',block:'center'}),100)">Ir a borrar</button></div></div>` : '';
+  $('retBan1').innerHTML=html; $('retBan2').innerHTML=html;
+}
+function policyHTML(){
+  const resp=esc(CFG.mandante||CFG.ut||'el mandante del estudio'), emp=esc(CFG.empresa||'IV INGENIERÍA'), mail=esc(CFG.contacto);
+  return `<p>Esta política explica cómo se tratan los datos personales que se recogen en la encuesta socioeconómica de los proyectos de agua potable rural (SSR) que realiza ${emp}.</p>
+  <h4>1. Quién es responsable</h4><p>El <b>responsable</b> de los datos es el mandante de cada estudio (para este proyecto: <b>${resp}</b>). ${emp} actúa como <b>encargado</b>: realiza la encuesta y el diseño por cuenta del mandante y sigue sus instrucciones. Contacto: <b>${mail}</b>.</p>
+  <h4>2. Qué datos se recogen</h4><p>Nombre, RUT, teléfono; composición del hogar (habitantes, hombres, mujeres), ocupación y <b>tramo</b> de ingreso (no el monto); características de la vivienda y sus servicios; ubicación (coordenadas) y fotografías de la edificación y de su tablilla; firma de la declaración de aceptación del servicio; y observaciones del encuestador. Las preguntas sobre <b>salud</b> (enfermedad entérica) y <b>pertenencia a pueblo indígena</b> son datos sensibles: solo se registran con un consentimiento expreso y separado, y se pueden dejar sin responder.</p>
+  <h4>3. Para qué se usan</h4><p>Solo para el diseño del sistema de agua potable (catastro de viviendas y arranques, cálculo de la demanda), la evaluación y postulación del proyecto y la elaboración de los listados e informes técnicos que se entregan al mandante. No se usan con fines comerciales ni para enviar publicidad.</p>
+  <h4>4. Base legal</h4><p>El consentimiento libre, informado y específico del encuestado, registrado en la app con fecha y hora. Quien no lo otorga puede igualmente quedar en el catastro, pero solo con la ubicación y fotos de la edificación, sin datos personales.</p>
+  <h4>5. A quién se comunican</h4><p>Al mandante y, cuando el proyecto lo requiere, a los organismos públicos que lo revisan, evalúan o financian. No se venden ni se ceden a otros terceros.</p>
+  <h4>6. Cuánto tiempo se guardan</h4><p>En los teléfonos de los encuestadores, hasta <b>${CFG.retMeses} meses</b> después de entregado el estudio; luego se eliminan. El expediente técnico entregado queda en poder del mandante según sus propias normas de archivo.</p>
+  <h4>7. Cómo se protegen</h4><p>La app funciona sin conexión: los datos quedan en el teléfono y no se envían a servidores de terceros. El acceso a la app se protege con PIN, los respaldos se cifran con contraseña (AES-256) y solo el personal del proyecto tiene acceso. Ante una vulneración de seguridad se informará al mandante para las notificaciones que correspondan.</p>
+  <h4>8. Sus derechos</h4><p>Puede pedir acceso, rectificación, supresión, oposición, portabilidad o bloqueo de sus datos, y retirar su consentimiento en cualquier momento, escribiendo a <b>${mail}</b> o directamente al mandante. Si no queda conforme, puede reclamar ante el mandante y ante la autoridad de protección de datos que establece la ley.</p>
+  <p class="mut">Versión ${CONS_VER}. Texto completo publicado en ${esc(CFG.privUrl)}</p>`;
+}
+function openPriv(){ $('privBody').innerHTML=policyHTML(); $('privSheet').classList.remove('hide'); }
+$('bPriv').onclick=openPriv; $('bPriv2').onclick=openPriv; $('privClose').onclick=()=>$('privSheet').classList.add('hide');
+
+const CFG_FIELDS=['proyecto','ssr','comuna','region','ut','mandante','encuestador','profesional','empresa','obsList','r1','r2','r3','acc','nread','contacto','privUrl','retMeses','lockMin'];
+function fillCfg(){ CFG_FIELDS.forEach(k=>$('c_'+k).value=CFG[k]??''); $('c_kmzPersonal').checked=!!CFG.kmzPersonal; fillProt(); $('hTitle').innerHTML=esc(CFG.ssr?('SSR '+CFG.ssr):'Proyecto sin nombre')+'<small>▾</small>'; }
+CFG_FIELDS.forEach(k=>$('c_'+k).addEventListener('change',e=>{ let v=e.target.value.trim(); if(['r1','r2','r3','acc','nread','retMeses','lockMin'].includes(k)) v=num(v)||DEF_CFG[k]; CFG[k]=v; saveCfg(); fillCfg(); renderProjSheet(); if(k==='obsList') renderObsTags(); if(['r1','r2','r3'].includes(k)){ renderChips(); syncChips(); } if(cur) onFormChange(); refreshRet(); }));
+$('c_kmzPersonal').onchange=e=>{ CFG.kmzPersonal=e.target.checked; saveCfg(); };
 async function storInfo(){
   let t=`Este proyecto: ${RECS.length} encuestas. Total en el teléfono: ${ALL.length} encuestas en ${PROJS.length} proyecto${PROJS.length===1?'':'s'}.`;
   try{ if(navigator.storage&&navigator.storage.estimate){ const e=await navigator.storage.estimate(); t+=` Espacio usado: ${(e.usage/1048576).toFixed(1)} MB.`; }
@@ -1287,6 +1529,10 @@ document.querySelectorAll('#t-form input, #t-form textarea').forEach(el=>{ if(el
 $('f_rut').addEventListener('blur',()=>{ if(rutClean($('f_rut').value).length>1){ $('f_rut').value=rutFormat($('f_rut').value); onFormChange(); }});
 $('f_tabEnEdif').addEventListener('change',()=>{ readForm(); renderPhotos(); });
 $('bGps').onclick=captureGPS;
+$('f_consiente').onchange=e=>{ cur.consiente=e.target.checked; cur.consTs=cur.consiente?Date.now():null; cur.consVer=cur.consiente?CONS_VER:null; cur.consLegacy=false;
+  if(!cur.consiente){ cur.consSens=false; $('f_consSens').checked=false; cur.consSensTs=null; } onFormChange(); };
+$('f_consSens').onchange=e=>{ if(e.target.checked && !cur.consiente){ e.target.checked=false; toast('Primero debe aceptar el consentimiento general'); return; }
+  cur.consSens=e.target.checked; cur.consSensTs=cur.consSens?Date.now():null; onFormChange(); };
 $('bSave').onclick=saveCur;
 $('bNew').onclick=()=>{ if(confirm('¿Descartar cambios no guardados y empezar una encuesta nueva?')) newForm(); };
 $('bSigClr').onclick=()=>{ cur.firma=null; drawSigFromData(); };
@@ -1307,7 +1553,8 @@ window.addEventListener('beforeunload',e=>{ if(cur && (cur.nombre||cur.firma||cu
    ARRANQUE
    ==================================================================== */
 (async function init(){
-  $('hLogo').src=LOGO_HDR;
+  $('hLogo').src=LOGO_HDR; $('lockLogo').src=LOGO_HDR;
+  if(CFG.pinHash) showLock('unlock');
   renderChips(); fillCfg();
   try{ await DB.open(); }catch(e){ alert('No se pudo abrir el almacenamiento local del navegador.'); }
   await reload(); newForm(); sigSetup(); startGPS();
